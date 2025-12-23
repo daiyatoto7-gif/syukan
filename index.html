@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>習慣トラッカー</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: #f0f2f5;
+            margin: 0;
+            padding: 20px;
+            color: #333;
+        }
+        h1 {
+            text-align: center;
+            color: #00796b;
+            font-size: 1.5rem;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        /* 入力エリア */
+        .input-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        input[type="text"] {
+            flex: 1;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+        }
+        button#add-btn {
+            padding: 0 20px;
+            background-color: #00796b;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        /* 習慣リスト */
+        .habit-card {
+            background: white;
+            padding: 15px;
+            margin-bottom: 12px;
+            border-radius: 12px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            transition: background 0.2s;
+        }
+        .habit-card.completed {
+            background-color: #e0f2f1;
+        }
+        .habit-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        .streak-box {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-width: 30px;
+        }
+        .fire-icon {
+            font-size: 24px;
+            color: #ccc;
+        }
+        .fire-icon.active {
+            color: #ff9800;
+        }
+        .streak-count {
+            font-size: 10px;
+            font-weight: bold;
+            color: #666;
+        }
+        .habit-title {
+            font-size: 18px;
+            font-weight: 600;
+        }
+        .completed .habit-title {
+            text-decoration: line-through;
+            color: #888;
+        }
+        /* 削除ボタン */
+        .delete-btn {
+            background: none;
+            border: none;
+            color: #ff5252;
+            font-size: 20px;
+            cursor: pointer;
+            margin-left: 10px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>習慣トラッカー</h1>
+    
+    <div class="input-group">
+        <input type="text" id="new-habit" placeholder="例：筋トレ、読書">
+        <button id="add-btn">追加</button>
+    </div>
+
+    <div id="habit-list">
+        </div>
+</div>
+
+<script>
+    // データの保存と読み込み
+    let habits = JSON.parse(localStorage.getItem('habits')) || [];
+
+    const habitListEl = document.getElementById('habit-list');
+    const inputEl = document.getElementById('new-habit');
+    const addBtn = document.getElementById('add-btn');
+
+    // 今日の日付を取得 (yyyy-mm-dd)
+    const getToday = () => new Date().toISOString().split('T')[0];
+
+    // 表示を更新する関数
+    function render() {
+        habitListEl.innerHTML = '';
+        const today = getToday();
+
+        if (habits.length === 0) {
+            habitListEl.innerHTML = '<p style="text-align:center; color:#888;">習慣を追加してスタート！</p>';
+            return;
+        }
+
+        habits.forEach((habit, index) => {
+            const isCompleted = habit.completedDates.includes(today);
+            const streak = calculateStreak(habit.completedDates);
+
+            const div = document.createElement('div');
+            div.className = `habit-card ${isCompleted ? 'completed' : ''}`;
+            div.onclick = (e) => {
+                // 削除ボタンを押したときは反応させない
+                if(e.target.classList.contains('delete-btn')) return;
+                toggleHabit(index);
+            };
+
+            div.innerHTML = `
+                <div class="habit-info">
+                    <div class="streak-box">
+                        <span class="fire-icon ${streak > 0 ? 'active' : ''}">🔥</span>
+                        <span class="streak-count">${streak}日</span>
+                    </div>
+                    <span class="habit-title">${habit.title}</span>
+                </div>
+                <div style="display:flex; align-items:center;">
+                    <input type="checkbox" ${isCompleted ? 'checked' : ''} style="transform: scale(1.5);">
+                    <button class="delete-btn" onclick="deleteHabit(${index})">×</button>
+                </div>
+            `;
+            habitListEl.appendChild(div);
+        });
+    }
+
+    // ストリーク計算ロジック
+    function calculateStreak(dates) {
+        let streak = 0;
+        let d = new Date();
+        // 今日のチェック
+        let checkStr = d.toISOString().split('T')[0];
+        
+        // 今日やってるか？
+        if (dates.includes(checkStr)) {
+            streak++;
+        } else {
+            // 今日やってないなら、昨日からチェック開始
+            // もし「昨日もやってない」なら即終了(0日)
+            d.setDate(d.getDate() - 1);
+            checkStr = d.toISOString().split('T')[0];
+            if (!dates.includes(checkStr)) return 0;
+        }
+
+        // 過去に遡る
+        while (true) {
+            d.setDate(d.getDate() - 1);
+            checkStr = d.toISOString().split('T')[0];
+            if (dates.includes(checkStr)) {
+                streak++;
+            } else {
+                break;
+            }
+        }
+        return streak;
+    }
+
+    // 追加
+    addBtn.onclick = () => {
+        const title = inputEl.value.trim();
+        if (title) {
+            habits.push({ title: title, completedDates: [] });
+            localStorage.setItem('habits', JSON.stringify(habits));
+            inputEl.value = '';
+            render();
+        }
+    };
+
+    // 削除
+    window.deleteHabit = (index) => {
+        if(confirm('削除しますか？')) {
+            habits.splice(index, 1);
+            localStorage.setItem('habits', JSON.stringify(habits));
+            render();
+        }
+    };
+
+    // 完了切り替え
+    window.toggleHabit = (index) => {
+        const today = getToday();
+        const dateIndex = habits[index].completedDates.indexOf(today);
+
+        if (dateIndex === -1) {
+            habits[index].completedDates.push(today);
+        } else {
+            habits[index].completedDates.splice(dateIndex, 1);
+        }
+        
+        localStorage.setItem('habits', JSON.stringify(habits));
+        render();
+    };
+
+    // 初回表示
+    render();
+</script>
+
+</body>
+</html>
