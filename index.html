@@ -3,111 +3,256 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>習慣トラッカー</title>
+    <title>習慣トラッカー（Dark）</title>
     <style>
+        :root {
+            --bg-color: #121212;
+            --card-bg: #1e1e1e;
+            --text-main: #e0e0e0;
+            --text-sub: #a0a0a0;
+            --accent: #bb86fc;
+        }
+
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            background-color: #f0f2f5;
+            background-color: var(--bg-color);
             margin: 0;
             padding: 20px;
-            color: #333;
+            color: var(--text-main);
         }
+
         h1 {
             text-align: center;
-            color: #00796b;
-            font-size: 1.5rem;
+            font-size: 1.2rem;
+            margin-bottom: 20px;
+            color: var(--text-sub);
+            font-weight: normal;
+            letter-spacing: 2px;
         }
+
         .container {
             max-width: 600px;
             margin: 0 auto;
         }
-        /* 入力エリア */
-        .input-group {
+
+        /* --- 入力エリアのスタイル --- */
+        .input-area {
+            background-color: var(--card-bg);
+            padding: 15px;
+            border-radius: 16px;
+            margin-bottom: 25px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+        }
+
+        .input-row-top {
             display: flex;
             gap: 10px;
-            margin-bottom: 20px;
+            margin-bottom: 15px;
         }
+
+        /* 絵文字選択 */
+        select#icon-select {
+            background: #333;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 10px;
+            font-size: 1.2rem;
+            appearance: none;
+            text-align: center;
+            cursor: pointer;
+        }
+
         input[type="text"] {
             flex: 1;
             padding: 12px;
-            border: 1px solid #ddd;
+            background: #2c2c2c;
+            border: 1px solid #333;
             border-radius: 8px;
             font-size: 16px;
-        }
-        button#add-btn {
-            padding: 0 20px;
-            background-color: #00796b;
             color: white;
+            outline: none;
+        }
+        input[type="text"]::placeholder {
+            color: #666;
+        }
+
+        /* 色選択 */
+        .color-selector {
+            display: flex;
+            gap: 10px;
+            justify-content: space-between;
+            overflow-x: auto;
+            padding-bottom: 5px;
+        }
+        .color-dot {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            cursor: pointer;
+            border: 2px solid transparent;
+            transition: transform 0.2s;
+        }
+        .color-dot.selected {
+            border-color: white;
+            transform: scale(1.1);
+        }
+
+        button#add-btn {
+            width: 100%;
+            margin-top: 15px;
+            padding: 12px;
+            background-color: var(--text-main);
+            color: black;
             border: none;
             border-radius: 8px;
             font-weight: bold;
             cursor: pointer;
         }
-        /* 習慣リスト */
+
+        /* --- 習慣カードのスタイル --- */
         .habit-card {
-            background: white;
-            padding: 15px;
-            margin-bottom: 12px;
+            background: var(--card-bg);
+            margin-bottom: 16px;
             border-radius: 12px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            overflow: hidden; /* バーのはみ出し防止 */
+            position: relative;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+            transition: transform 0.1s;
+        }
+        
+        .card-content {
+            padding: 15px 20px;
             display: flex;
             align-items: center;
             justify-content: space-between;
-            transition: background 0.2s;
+            z-index: 2;
+            position: relative;
         }
-        .habit-card.completed {
-            background-color: #e0f2f1;
-        }
+
         .habit-info {
             display: flex;
             align-items: center;
             gap: 15px;
         }
-        .streak-box {
+
+        .habit-icon {
+            font-size: 24px;
+            width: 40px;
+            height: 40px;
+            background: rgba(255,255,255,0.05);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .habit-text-group {
             display: flex;
             flex-direction: column;
-            align-items: center;
-            min-width: 30px;
         }
-        .fire-icon {
-            font-size: 24px;
-            color: #ccc;
-        }
-        .fire-icon.active {
-            color: #ff9800;
-        }
-        .streak-count {
-            font-size: 10px;
-            font-weight: bold;
-            color: #666;
-        }
+
         .habit-title {
-            font-size: 18px;
+            font-size: 16px;
             font-weight: 600;
+            color: var(--text-main);
         }
-        .completed .habit-title {
+        
+        .streak-info {
+            font-size: 12px;
+            color: var(--text-sub);
+            margin-top: 2px;
+        }
+
+        /* 完了時のスタイル */
+        .habit-card.completed .habit-title {
+            color: #666;
             text-decoration: line-through;
-            color: #888;
         }
+        .habit-card.completed .habit-icon {
+            opacity: 0.5;
+        }
+
+        /* チェックボックス */
+        .check-circle {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            border: 2px solid #555;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .habit-card.completed .check-circle {
+            background-color: var(--accent); /* JSで上書きされます */
+            border-color: transparent;
+        }
+        .check-circle::after {
+            content: '✔';
+            color: black; /* チェックマークの色 */
+            font-size: 14px;
+            display: none;
+        }
+        .habit-card.completed .check-circle::after {
+            display: block;
+        }
+
+        /* --- 連続バー (Streak Bar) --- */
+        .streak-bar-bg {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 6px; /* バーの太さ */
+            background: rgba(255,255,255,0.05);
+        }
+        .streak-bar-fill {
+            height: 100%;
+            width: 0%;
+            transition: width 0.5s ease-out;
+            border-radius: 0 4px 4px 0;
+        }
+
         /* 削除ボタン */
         .delete-btn {
             background: none;
             border: none;
-            color: #ff5252;
-            font-size: 20px;
+            color: #555;
+            font-size: 18px;
             cursor: pointer;
-            margin-left: 10px;
+            padding: 5px 10px;
+            margin-left: 5px;
         }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h1>習慣トラッカー</h1>
+    <h1>HABIT TRACKER</h1>
     
-    <div class="input-group">
-        <input type="text" id="new-habit" placeholder="例：筋トレ、読書">
-        <button id="add-btn">追加</button>
+    <div class="input-area">
+        <div class="input-row-top">
+            <select id="icon-select">
+                <option value="💪">💪</option>
+                <option value="📚">📚</option>
+                <option value="🍳">🍳</option>
+                <option value="🧹">🧹</option>
+                <option value="💻">💻</option>
+                <option value="🏃">🏃</option>
+                <option value="💧">💧</option>
+                <option value="💊">💊</option>
+                <option value="💤">💤</option>
+                <option value="💰">💰</option>
+            </select>
+            <input type="text" id="new-habit" placeholder="新しい習慣 (例: 筋トレ)">
+        </div>
+
+        <div class="color-selector" id="color-selector">
+            </div>
+
+        <button id="add-btn">追加する</button>
     </div>
 
     <div id="habit-list">
@@ -115,74 +260,109 @@
 </div>
 
 <script>
-    // データの保存と読み込み
+    // --- 初期設定 ---
     let habits = JSON.parse(localStorage.getItem('habits')) || [];
 
+    // カラーパレット定義
+    const colors = [
+        '#ff5252', // 赤
+        '#ff9800', // オレンジ
+        '#ffd740', // 黄
+        '#69f0ae', // 緑
+        '#40c4ff', // 水色
+        '#7c4dff', // 紫
+        '#ff4081'  // ピンク
+    ];
+    let selectedColor = colors[3]; // デフォルト緑
+
+    // 要素の取得
     const habitListEl = document.getElementById('habit-list');
     const inputEl = document.getElementById('new-habit');
+    const iconSelect = document.getElementById('icon-select');
     const addBtn = document.getElementById('add-btn');
+    const colorSelector = document.getElementById('color-selector');
 
-    // 今日の日付を取得 (yyyy-mm-dd)
+    // 今日の日付 (yyyy-mm-dd)
     const getToday = () => new Date().toISOString().split('T')[0];
 
-    // 表示を更新する関数
+    // --- 色選択ボタンの生成 ---
+    colors.forEach(color => {
+        const dot = document.createElement('div');
+        dot.className = 'color-dot';
+        dot.style.backgroundColor = color;
+        if (color === selectedColor) dot.classList.add('selected');
+        
+        dot.onclick = () => {
+            document.querySelectorAll('.color-dot').forEach(d => d.classList.remove('selected'));
+            dot.classList.add('selected');
+            selectedColor = color;
+        };
+        colorSelector.appendChild(dot);
+    });
+
+    // --- 描画関数 ---
     function render() {
         habitListEl.innerHTML = '';
         const today = getToday();
 
         if (habits.length === 0) {
-            habitListEl.innerHTML = '<p style="text-align:center; color:#888;">習慣を追加してスタート！</p>';
+            habitListEl.innerHTML = '<p style="text-align:center; color:#555; margin-top:40px;">習慣を追加してスタート</p>';
             return;
         }
 
         habits.forEach((habit, index) => {
+            // データ互換性（古いデータに色やアイコンがない場合の対策）
+            const hIcon = habit.icon || '📝';
+            const hColor = habit.color || '#69f0ae';
+
             const isCompleted = habit.completedDates.includes(today);
             const streak = calculateStreak(habit.completedDates);
+            
+            // バーの長さ計算 (最大30日で100%とする)
+            let barWidth = Math.min(streak * 3.3, 100); 
+            // 0日でも少し見えていたほうがいいなら微調整、今回は0なら0
 
             const div = document.createElement('div');
             div.className = `habit-card ${isCompleted ? 'completed' : ''}`;
-            div.onclick = (e) => {
-                // 削除ボタンを押したときは反応させない
-                if(e.target.classList.contains('delete-btn')) return;
-                toggleHabit(index);
-            };
-
+            
             div.innerHTML = `
-                <div class="habit-info">
-                    <div class="streak-box">
-                        <span class="fire-icon ${streak > 0 ? 'active' : ''}">🔥</span>
-                        <span class="streak-count">${streak}日</span>
-                    </div>
-                    <span class="habit-title">${habit.title}</span>
+                <div class="streak-bar-bg">
+                    <div class="streak-bar-fill" style="width: ${barWidth}%; background-color: ${hColor};"></div>
                 </div>
-                <div style="display:flex; align-items:center;">
-                    <input type="checkbox" ${isCompleted ? 'checked' : ''} style="transform: scale(1.5);">
-                    <button class="delete-btn" onclick="deleteHabit(${index})">×</button>
+                
+                <div class="card-content" onclick="toggleHabit(${index})">
+                    <div class="habit-info">
+                        <div class="habit-icon" style="color: ${hColor};">${hIcon}</div>
+                        <div class="habit-text-group">
+                            <span class="habit-title">${habit.title}</span>
+                            <span class="streak-info">🔥 ${streak}日連続</span>
+                        </div>
+                    </div>
+                    
+                    <div style="display:flex; align-items:center;">
+                        <div class="check-circle" style="${isCompleted ? 'background-color:'+hColor+'; border-color:'+hColor : ''}"></div>
+                        <button class="delete-btn" onclick="event.stopPropagation(); deleteHabit(${index})">×</button>
+                    </div>
                 </div>
             `;
             habitListEl.appendChild(div);
         });
     }
 
-    // ストリーク計算ロジック
+    // --- ストリーク計算 (変更なし) ---
     function calculateStreak(dates) {
         let streak = 0;
         let d = new Date();
-        // 今日のチェック
         let checkStr = d.toISOString().split('T')[0];
         
-        // 今日やってるか？
         if (dates.includes(checkStr)) {
             streak++;
         } else {
-            // 今日やってないなら、昨日からチェック開始
-            // もし「昨日もやってない」なら即終了(0日)
             d.setDate(d.getDate() - 1);
             checkStr = d.toISOString().split('T')[0];
             if (!dates.includes(checkStr)) return 0;
         }
 
-        // 過去に遡る
         while (true) {
             d.setDate(d.getDate() - 1);
             checkStr = d.toISOString().split('T')[0];
@@ -195,27 +375,32 @@
         return streak;
     }
 
-    // 追加
+    // --- 追加処理 ---
     addBtn.onclick = () => {
         const title = inputEl.value.trim();
         if (title) {
-            habits.push({ title: title, completedDates: [] });
+            habits.push({ 
+                title: title, 
+                completedDates: [],
+                icon: iconSelect.value, // 選択されたアイコン
+                color: selectedColor    // 選択された色
+            });
             localStorage.setItem('habits', JSON.stringify(habits));
             inputEl.value = '';
             render();
         }
     };
 
-    // 削除
+    // --- 削除処理 ---
     window.deleteHabit = (index) => {
-        if(confirm('削除しますか？')) {
+        if(confirm('この習慣を削除しますか？')) {
             habits.splice(index, 1);
             localStorage.setItem('habits', JSON.stringify(habits));
             render();
         }
     };
 
-    // 完了切り替え
+    // --- 完了切り替え ---
     window.toggleHabit = (index) => {
         const today = getToday();
         const dateIndex = habits[index].completedDates.indexOf(today);
@@ -230,7 +415,6 @@
         render();
     };
 
-    // 初回表示
     render();
 </script>
 
