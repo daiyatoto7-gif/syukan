@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>習慣トラッカー</title>
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
     <style>
         :root {
             --bg-color: #121212;
@@ -166,14 +167,27 @@
             overflow: hidden;
             position: relative;
             box-shadow: 0 4px 6px rgba(0,0,0,0.2);
-            transition: transform 0.1s cubic-bezier(0.4, 0.0, 0.2, 1);
+            transition: transform 0.1s cubic-bezier(0.4, 0.0, 0.2, 1), box-shadow 0.2s;
             border: 1px solid transparent;
             cursor: pointer;
+            /* ドラッグ用設定 */
+            touch-action: pan-y; /* 縦スクロールは許可 */
         }
         
-        .habit-card:active { transform: scale(0.96); }
+        /* ドラッグ中のスタイル */
+        .sortable-ghost {
+            opacity: 0.4;
+            background: #333;
+        }
+        .sortable-drag {
+            background: #2a2a2a;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.5);
+            transform: scale(1.02);
+            z-index: 1000;
+        }
+
+        .habit-card:active { transform: scale(0.98); }
         
-        /* バウンス */
         .habit-card.bouncing {
             animation: bounce 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
@@ -198,6 +212,19 @@
             position: relative;
         }
 
+        /* グリップ（ドラッグつまみ） */
+        .drag-handle {
+            width: 10px;
+            height: 20px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            gap: 2px;
+            margin-right: 15px;
+            opacity: 0.3;
+        }
+        .drag-dot { width: 4px; height: 4px; background-color: white; border-radius: 50%; }
+
         .rank-badge {
             position: absolute;
             top: 0;
@@ -217,7 +244,7 @@
             display: flex;
             align-items: center;
             gap: 15px;
-            flex: 1; /* テキスト部分を広げる */
+            flex: 1;
         }
 
         .habit-icon {
@@ -243,7 +270,6 @@
             margin-top: 4px;
         }
         
-        /* チェックボックス */
         .check-circle {
             width: 28px;
             height: 28px;
@@ -266,7 +292,6 @@
         }
         .habit-card.completed .check-circle::after { opacity: 1; transform: rotate(45deg) scale(1); }
 
-        /* 連続バー */
         .streak-bar-bg {
             position: absolute;
             bottom: 0; left: 0; width: 100%; height: 6px;
@@ -280,14 +305,13 @@
             box-shadow: 0 0 10px var(--bar-color);
         }
 
-        /* メニューボタン (⋮) */
         .menu-btn {
             background: none; border: none; color: #666;
             font-size: 20px; padding: 10px 5px; cursor: pointer;
             z-index: 10;
         }
 
-        /* --- モーダル共通 --- */
+        /* モーダル */
         .modal-overlay {
             position: fixed; top: 0; left: 0; right: 0; bottom: 0;
             background: rgba(0,0,0,0.8);
@@ -296,7 +320,6 @@
             transition: opacity 0.2s; backdrop-filter: blur(5px);
         }
         .modal-overlay.active { opacity: 1; pointer-events: auto; }
-        
         .modal-content {
             background: var(--modal-bg); padding: 25px; border-radius: 20px;
             width: 90%; max-width: 350px; text-align: center;
@@ -308,15 +331,12 @@
         .modal-title { margin-bottom: 20px; font-size: 18px; font-weight: bold; }
         .modal-section { margin-bottom: 20px; }
         .modal-label { display: block; margin-bottom: 10px; color: var(--text-sub); font-size: 12px; }
-        
-        /* 入力モーダルのスタイル */
         .modal-input-text {
             width: 100%; padding: 12px; background: #333;
             border: 1px solid #444; border-radius: 8px;
             color: white; font-size: 16px; outline: none; box-sizing: border-box;
             text-align: center;
         }
-
         select#modal-icon-select {
             background: #333; color: white; border: none;
             padding: 12px; border-radius: 12px; font-size: 28px;
@@ -329,7 +349,6 @@
             transition: transform 0.2s;
         }
         .color-dot.selected { border-color: white; transform: scale(1.1); }
-        
         .modal-actions { display: flex; gap: 10px; margin-top: 25px; }
         .modal-btn {
             flex: 1; padding: 14px; border: none; border-radius: 12px;
@@ -337,23 +356,20 @@
         }
         .btn-cancel { background: #333; color: white; }
         .btn-confirm { background: white; color: black; }
-        .btn-delete { background: #ff5252; color: white; margin-top: 10px; width: 100%; }
 
-        /* --- アクションシート（下から出るメニュー） --- */
+        /* アクションシート */
         .action-sheet-overlay {
             position: fixed; top: 0; left: 0; right: 0; bottom: 0;
             background: rgba(0,0,0,0.6); z-index: 2000;
             opacity: 0; pointer-events: none; transition: opacity 0.2s;
         }
         .action-sheet-overlay.active { opacity: 1; pointer-events: auto; }
-        
         .action-sheet {
             position: absolute; bottom: 0; left: 0; right: 0;
             background: var(--card-bg); border-top-left-radius: 20px; border-top-right-radius: 20px;
-            padding: 20px; transform: translateY(100%); transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            padding: 20px; transform: translateY(100%); transition: transform 0.3s;
         }
         .action-sheet-overlay.active .action-sheet { transform: translateY(0); }
-        
         .action-btn {
             width: 100%; padding: 15px; margin-bottom: 10px;
             background: #333; border: none; border-radius: 12px;
@@ -362,7 +378,6 @@
         }
         .action-btn.delete { color: #ff5252; background: rgba(255, 82, 82, 0.1); }
         .action-btn.cancel { background: transparent; color: #888; margin-bottom: 0; }
-
     </style>
 </head>
 <body>
@@ -400,12 +415,10 @@
 <div class="modal-overlay" id="edit-modal">
     <div class="modal-content">
         <div class="modal-title" id="modal-title">習慣を編集</div>
-        
         <div class="modal-section">
             <span class="modal-label">習慣の名前</span>
             <input type="text" class="modal-input-text" id="modal-input-name" placeholder="習慣名">
         </div>
-
         <div class="modal-section">
             <span class="modal-label">アイコン</span>
             <select id="modal-icon-select">
@@ -443,7 +456,7 @@
 </div>
 
 <script>
-    // --- 音声生成 (AudioContext) ---
+    // --- 音声生成 ---
     const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
     function playPopSound() {
         if (audioCtx.state === 'suspended') audioCtx.resume();
@@ -460,13 +473,12 @@
         if (navigator.vibrate) navigator.vibrate(15);
     }
 
-    // --- データ管理 ---
+    // --- データ変数 ---
     let habits = JSON.parse(localStorage.getItem('habits')) || [];
     let filterMode = 'all'; 
-    
-    // 編集・メニュー操作用
-    let activeIndex = null; // 現在メニューを開いている対象のindex
-    let isEditing = false;  // 追加モードか編集モードか
+    let activeIndex = null; 
+    let isEditing = false;
+    let isDragging = false; // ドラッグ中フラグ
 
     const colors = ['#ff5252', '#ff9800', '#ffd740', '#69f0ae', '#40c4ff', '#7c4dff', '#ff4081'];
     let selectedColor = colors[3];
@@ -475,14 +487,10 @@
     const habitListEl = document.getElementById('habit-list');
     const inputEl = document.getElementById('new-habit');
     const addBtn = document.getElementById('add-btn');
-    
-    // 進捗パネル
     const progPercentEl = document.getElementById('prog-percent');
     const progCountEl = document.getElementById('prog-count');
     const progBarEl = document.getElementById('prog-bar');
     const progSectionEl = document.getElementById('progress-section');
-
-    // モーダル・シート
     const editModal = document.getElementById('edit-modal');
     const modalTitle = document.getElementById('modal-title');
     const modalInputName = document.getElementById('modal-input-name');
@@ -491,6 +499,29 @@
     const actionSheet = document.getElementById('action-sheet');
 
     const getToday = () => new Date().toISOString().split('T')[0];
+
+    // --- SortableJS 初期化 (並び替え機能) ---
+    // ライブラリはCDNで読み込み済み
+    let sortableInstance = Sortable.create(habitListEl, {
+        animation: 150,
+        delay: 200, // 200ms長押しでドラッグ開始
+        delayOnTouchOnly: true, // タッチデバイスのみ長押し必須
+        handle: '.habit-card', // カード全体でドラッグ可能
+        disabled: false, // 初期値
+        onStart: function() {
+            isDragging = true; // ドラッグ開始
+            triggerHaptic();
+        },
+        onEnd: function (evt) {
+            // ドラッグ終了後、少し待ってからフラグを戻す（クリック暴発防止）
+            setTimeout(() => { isDragging = false; }, 100);
+            
+            // 配列の並び替え
+            const item = habits.splice(evt.oldIndex, 1)[0];
+            habits.splice(evt.newIndex, 0, item);
+            localStorage.setItem('habits', JSON.stringify(habits));
+        }
+    });
 
     // --- カラーパレット初期化 ---
     colors.forEach(color => {
@@ -506,7 +537,6 @@
         modalColorSelector.appendChild(dot);
     });
 
-    // --- 進捗更新 ---
     function updateProgress() {
         const today = getToday();
         const total = habits.length;
@@ -519,28 +549,32 @@
         }
         const done = habits.filter(h => h.completedDates.includes(today)).length;
         const percent = Math.round((done / total) * 100);
-        
         progPercentEl.textContent = `${percent}%`;
         progCountEl.textContent = `(${done}/${total})`;
         progBarEl.style.width = `${percent}%`;
-        
         if (percent === 100) progSectionEl.classList.add('all-done');
         else progSectionEl.classList.remove('all-done');
     }
 
-    // --- フィルタ ---
     function setFilter(mode) {
         playPopSound();
         filterMode = mode;
         document.getElementById('tab-all').classList.toggle('active', mode === 'all');
         document.getElementById('tab-unchecked').classList.toggle('active', mode === 'unchecked');
+        
+        // 未完了のみ表示中は並び替えを無効化
+        if (mode === 'all') {
+            sortableInstance.option("disabled", false);
+        } else {
+            sortableInstance.option("disabled", true);
+        }
+        
         render();
     }
 
-    // --- メイン描画 ---
     function render() {
         habitListEl.innerHTML = '';
-        updateProgress(); // 進捗も更新
+        updateProgress();
         const today = getToday();
 
         const visibleHabits = habits.map((h, i) => ({...h, originalIndex: i})).filter(h => {
@@ -557,10 +591,9 @@
             const index = habit.originalIndex;
             const hIcon = habit.icon || '📝';
             const hColor = habit.color || '#69f0ae';
-
             const isCompleted = habit.completedDates.includes(today);
             const streak = calculateStreak(habit.completedDates);
-            const totalDays = habit.completedDates.length; // 累計日数
+            const totalDays = habit.completedDates.length;
             
             let maxDays, rankClass, rankLabel;
             if (streak > 30) { maxDays = 365; rankClass = 'rank-gold'; rankLabel = 'Gold'; } 
@@ -578,11 +611,11 @@
 
             div.innerHTML = `
                 <div class="rank-badge">${rankLabel}</div>
-                <div class="streak-bar-bg">
-                    <div class="streak-bar-fill" style="width: ${barWidth}%;"></div>
-                </div>
+                <div class="streak-bar-bg"><div class="streak-bar-fill" style="width: ${barWidth}%;"></div></div>
                 
                 <div class="card-content" onclick="handleCardClick(${index})">
+                    <div class="drag-handle"><div class="drag-dot"></div><div class="drag-dot"></div><div class="drag-dot"></div></div>
+                    
                     <div class="check-circle" style="${checkStyle}"></div>
                     
                     <div class="habit-info">
@@ -604,7 +637,6 @@
         });
     }
 
-    // --- ストリーク計算 ---
     function calculateStreak(dates) {
         let streak = 0;
         let d = new Date();
@@ -631,8 +663,10 @@
         return streak;
     }
 
-    // --- アクション (完了/未完了) ---
     window.handleCardClick = (index) => {
+        // ドラッグ中ならクリック処理をしない
+        if (isDragging) return;
+
         playPopSound();
         triggerHaptic();
         const card = document.getElementById(`card-${index}`);
@@ -648,13 +682,16 @@
         setTimeout(() => {
             if (dateIndex === -1) habits[index].completedDates.push(today);
             else habits[index].completedDates.splice(dateIndex, 1);
-            saveAndRender();
+            localStorage.setItem('habits', JSON.stringify(habits));
+            render();
         }, 150);
     };
 
-    // --- メニュー表示 ---
     window.openActionSheet = (e, index) => {
-        e.stopPropagation(); // カードクリック暴発防止
+        e.stopPropagation();
+        // ドラッグ中ならメニューを開かない
+        if (isDragging) return;
+        
         activeIndex = index;
         actionSheet.classList.add('active');
     };
@@ -662,41 +699,32 @@
         actionSheet.classList.remove('active');
     };
 
-    // --- 編集/追加モーダル制御 ---
-    // 追加ボタンから
     addBtn.onclick = () => {
         const title = inputEl.value.trim();
-        startAdd(title); // 空でもOK（モーダルで入力させる）
+        startAdd(title);
     };
 
     function startAdd(initialTitle) {
         playPopSound();
         isEditing = false;
         activeIndex = null;
-        
         modalTitle.textContent = "新しい習慣";
         modalInputName.value = initialTitle;
         inputEl.value = '';
-        
-        // 色選択リセット（デフォルト緑）
         selectedColor = colors[3];
         updateColorSelection();
-        
         editModal.classList.add('active');
     }
 
-    // メニューの「編集」から
     window.openEditModal = () => {
         closeActionSheet();
         isEditing = true;
         const habit = habits[activeIndex];
-        
         modalTitle.textContent = "習慣を編集";
         modalInputName.value = habit.title;
         modalIconSelect.value = habit.icon;
         selectedColor = habit.color;
         updateColorSelection();
-        
         editModal.classList.add('active');
     };
 
@@ -707,14 +735,8 @@
     function updateColorSelection() {
         document.querySelectorAll('.color-dot').forEach(d => {
             d.classList.remove('selected');
-            // RGB比較だと面倒なので、style属性を直接見る簡易実装
-            // 実際はDOM生成時に保持したほうが早いが、数が少ないのでこれでOK
-            // RGB変換されるブラウザ対策のため、ここでは再生成しないが、
-            // selectedColorと同じ色コードを持つ要素にクラスを付与する
-            // ★ここでは簡易的に全リフレッシュせずにクリック時と同じ処理を行う
-            // (色コードのマッチングが面倒なため、DOM再生成したほうが確実)
-            // ↓
-            // DOM再生成
+            // 簡易再描画（selectedColorの再適用）
+            const modalColorSelector = document.getElementById('modal-color-selector');
             modalColorSelector.innerHTML = '';
             colors.forEach(color => {
                 const dot = document.createElement('div');
@@ -724,56 +746,36 @@
                 dot.onclick = () => {
                     playPopSound();
                     selectedColor = color;
-                    updateColorSelection(); // 再帰で再描画
+                    updateColorSelection();
                 };
                 modalColorSelector.appendChild(dot);
             });
         });
     }
 
-    // 保存ボタン
     window.saveHabitData = () => {
         const name = modalInputName.value.trim();
-        if (!name) {
-            alert('習慣の名前を入力してください');
-            return;
-        }
+        if (!name) { alert('習慣の名前を入力してください'); return; }
         playPopSound();
-
-        const newData = {
-            title: name,
-            icon: modalIconSelect.value,
-            color: selectedColor
-        };
-
+        const newData = { title: name, icon: modalIconSelect.value, color: selectedColor };
         if (isEditing && activeIndex !== null) {
-            // 更新
             habits[activeIndex] = { ...habits[activeIndex], ...newData };
         } else {
-            // 新規
-            habits.push({
-                ...newData,
-                completedDates: []
-            });
+            habits.push({ ...newData, completedDates: [] });
         }
-        
-        saveAndRender();
+        localStorage.setItem('habits', JSON.stringify(habits));
+        render();
         closeEditModal();
     };
 
-    // --- 削除 ---
     window.deleteHabit = () => {
         if(confirm('本当に削除しますか？\n（積み上げた記録も消えます）')) {
             habits.splice(activeIndex, 1);
-            saveAndRender();
+            localStorage.setItem('habits', JSON.stringify(habits));
+            render();
             closeActionSheet();
         }
     };
-
-    function saveAndRender() {
-        localStorage.setItem('habits', JSON.stringify(habits));
-        render();
-    }
 
     render();
 </script>
