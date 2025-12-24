@@ -10,8 +10,13 @@
             --card-bg: #1e1e1e;
             --text-main: #e0e0e0;
             --text-sub: #a0a0a0;
-            --bar-color: #333333; /* バーの統一色 */
+            --bar-color: #00e676; /* 蛍光グリーン */
             --modal-bg: #252525;
+            
+            /* ランクカラー */
+            --bronze: #cd7f32;
+            --silver: #e0e0e0;
+            --gold: #ffd700;
         }
 
         body {
@@ -20,7 +25,7 @@
             margin: 0;
             padding: 20px;
             color: var(--text-main);
-            padding-bottom: 80px; /* 下部の余白 */
+            padding-bottom: 80px;
         }
 
         h1 {
@@ -37,37 +42,12 @@
             margin: 0 auto;
         }
 
-        /* --- フィルタボタン --- */
-        .filter-tabs {
-            display: flex;
-            justify-content: center;
-            margin-bottom: 20px;
-            background: var(--card-bg);
-            padding: 4px;
-            border-radius: 12px;
-        }
-        .filter-tab {
-            flex: 1;
-            padding: 10px;
-            text-align: center;
-            cursor: pointer;
-            border-radius: 8px;
-            font-size: 14px;
-            color: var(--text-sub);
-            transition: all 0.2s;
-        }
-        .filter-tab.active {
-            background-color: #333;
-            color: white;
-            font-weight: bold;
-        }
-
         /* --- 入力エリア --- */
         .input-area {
             background-color: var(--card-bg);
             padding: 15px;
             border-radius: 16px;
-            margin-bottom: 25px;
+            margin-bottom: 15px; /* 下のマージンを少し詰める */
             display: flex;
             gap: 10px;
             box-shadow: 0 4px 6px rgba(0,0,0,0.3);
@@ -96,6 +76,31 @@
             white-space: nowrap;
         }
 
+        /* --- フィルタボタン (位置変更) --- */
+        .filter-tabs {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 25px;
+            background: var(--card-bg);
+            padding: 4px;
+            border-radius: 12px;
+        }
+        .filter-tab {
+            flex: 1;
+            padding: 10px;
+            text-align: center;
+            cursor: pointer;
+            border-radius: 8px;
+            font-size: 14px;
+            color: var(--text-sub);
+            transition: all 0.2s;
+        }
+        .filter-tab.active {
+            background-color: #333;
+            color: white;
+            font-weight: bold;
+        }
+
         /* --- 習慣カード --- */
         .habit-card {
             background: var(--card-bg);
@@ -105,8 +110,14 @@
             position: relative;
             box-shadow: 0 4px 6px rgba(0,0,0,0.2);
             transition: transform 0.1s;
+            border: 1px solid transparent; /* ランク装飾用 */
         }
         
+        /* ランク別の装飾 */
+        .habit-card.rank-bronze { border-color: rgba(205, 127, 50, 0.5); }
+        .habit-card.rank-silver { border-color: rgba(224, 224, 224, 0.5); }
+        .habit-card.rank-gold   { border-color: rgba(255, 215, 0, 0.5); box-shadow: 0 0 10px rgba(255, 215, 0, 0.1); }
+
         .card-content {
             padding: 15px 20px;
             display: flex;
@@ -115,6 +126,22 @@
             z-index: 2;
             position: relative;
         }
+
+        /* ランクバッジ（右上） */
+        .rank-badge {
+            position: absolute;
+            top: 0;
+            right: 0;
+            padding: 2px 8px;
+            font-size: 10px;
+            font-weight: bold;
+            border-bottom-left-radius: 8px;
+            color: #121212;
+            z-index: 3;
+        }
+        .rank-bronze .rank-badge { background-color: var(--bronze); }
+        .rank-silver .rank-badge { background-color: var(--silver); }
+        .rank-gold .rank-badge   { background-color: var(--gold); }
 
         .habit-info {
             display: flex;
@@ -131,7 +158,6 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            transition: color 0.2s;
         }
 
         .habit-text-group {
@@ -164,7 +190,6 @@
             transition: all 0.2s;
             background: transparent;
         }
-        /* チェックマーク（CSSで描画） */
         .check-circle::after {
             content: '';
             display: block;
@@ -176,10 +201,7 @@
             opacity: 0;
             margin-bottom: 2px;
         }
-        /* 完了時のチェック状態 */
-        .habit-card.completed .check-circle::after {
-            opacity: 1;
-        }
+        .habit-card.completed .check-circle::after { opacity: 1; }
 
         /* --- 連続バー (Streak Bar) --- */
         .streak-bar-bg {
@@ -194,8 +216,9 @@
             height: 100%;
             width: 0%;
             transition: width 0.5s ease-out;
-            background-color: var(--bar-color); /* 統一色 */
+            background-color: var(--bar-color); /* 蛍光グリーン */
             border-radius: 0 4px 4px 0;
+            box-shadow: 0 0 8px var(--bar-color); /* 少し光らせる */
         }
 
         /* 削除ボタン */
@@ -209,7 +232,7 @@
             margin-left: 5px;
         }
 
-        /* --- モーダル（詳細設定） --- */
+        /* --- モーダル --- */
         .modal-overlay {
             position: fixed;
             top: 0; left: 0; right: 0; bottom: 0;
@@ -239,7 +262,6 @@
             font-size: 18px;
             font-weight: bold;
         }
-        
         .modal-section { margin-bottom: 20px; }
         .modal-label { 
             display: block; 
@@ -247,8 +269,6 @@
             color: var(--text-sub); 
             font-size: 12px;
         }
-
-        /* アイコン選択 */
         select#modal-icon-select {
             background: #333;
             color: white;
@@ -260,8 +280,6 @@
             text-align: center;
             appearance: none;
         }
-
-        /* 色選択 */
         .color-selector {
             display: flex;
             gap: 10px;
@@ -280,7 +298,6 @@
             border-color: white;
             transform: scale(1.1);
         }
-
         .modal-actions {
             display: flex;
             gap: 10px;
@@ -304,14 +321,14 @@
 <div class="container">
     <h1>HABIT TRACKER</h1>
     
-    <div class="filter-tabs">
-        <div class="filter-tab active" id="tab-all" onclick="setFilter('all')">すべて</div>
-        <div class="filter-tab" id="tab-unchecked" onclick="setFilter('unchecked')">未完了のみ</div>
-    </div>
-
     <div class="input-area">
         <input type="text" id="new-habit" placeholder="新しい習慣 (例: 読書)">
         <button id="add-btn">追加</button>
+    </div>
+
+    <div class="filter-tabs">
+        <div class="filter-tab active" id="tab-all" onclick="setFilter('all')">すべて</div>
+        <div class="filter-tab" id="tab-unchecked" onclick="setFilter('unchecked')">未完了のみ</div>
     </div>
 
     <div id="habit-list">
@@ -356,18 +373,13 @@
 <script>
     // --- 初期設定 ---
     let habits = JSON.parse(localStorage.getItem('habits')) || [];
-    let filterMode = 'all'; // 'all' or 'unchecked'
-    let draftTitle = '';    // モーダル用の一時保存
+    let filterMode = 'all'; 
+    let draftTitle = '';    
 
     // カラーパレット
     const colors = [
-        '#ff5252', // 赤
-        '#ff9800', // オレンジ
-        '#ffd740', // 黄
-        '#69f0ae', // 緑
-        '#40c4ff', // 水色
-        '#7c4dff', // 紫
-        '#ff4081'  // ピンク
+        '#ff5252', '#ff9800', '#ffd740', '#69f0ae', 
+        '#40c4ff', '#7c4dff', '#ff4081'
     ];
     let selectedColor = colors[3];
 
@@ -375,21 +387,17 @@
     const habitListEl = document.getElementById('habit-list');
     const inputEl = document.getElementById('new-habit');
     const addBtn = document.getElementById('add-btn');
-    
-    // モーダル要素
     const modal = document.getElementById('modal');
     const modalIconSelect = document.getElementById('modal-icon-select');
     const modalColorSelector = document.getElementById('modal-color-selector');
 
-    // 日付ユーティリティ
     const getToday = () => new Date().toISOString().split('T')[0];
 
-    // --- カラーセレクター生成 (モーダル内) ---
+    // --- カラーセレクター生成 ---
     colors.forEach(color => {
         const dot = document.createElement('div');
         dot.className = 'color-dot';
         dot.style.backgroundColor = color;
-        // 初期選択
         if (color === selectedColor) dot.classList.add('selected');
         
         dot.onclick = () => {
@@ -400,7 +408,7 @@
         modalColorSelector.appendChild(dot);
     });
 
-    // --- フィルタ切り替え ---
+    // --- フィルタ設定 ---
     function setFilter(mode) {
         filterMode = mode;
         document.getElementById('tab-all').classList.toggle('active', mode === 'all');
@@ -413,43 +421,57 @@
         habitListEl.innerHTML = '';
         const today = getToday();
 
-        // フィルタリング処理
         const visibleHabits = habits.map((h, i) => ({...h, originalIndex: i})).filter(h => {
             if (filterMode === 'all') return true;
             return !h.completedDates.includes(today);
         });
 
         if (visibleHabits.length === 0) {
-            habitListEl.innerHTML = '<p style="text-align:center; color:#555; margin-top:40px;">表示する習慣がありません</p>';
+            habitListEl.innerHTML = '<p style="text-align:center; color:#555; margin-top:40px;">リストは空です</p>';
             return;
         }
 
         visibleHabits.forEach((habit) => {
             const index = habit.originalIndex;
-            
-            // データ互換性
             const hIcon = habit.icon || '📝';
             const hColor = habit.color || '#69f0ae';
 
             const isCompleted = habit.completedDates.includes(today);
             const streak = calculateStreak(habit.completedDates);
             
-            // バーの長さ (最大30日)
-            let barWidth = Math.min(streak * 3.3, 100); 
+            // --- ランクとバーのスケール計算ロジック ---
+            let maxDays, rankClass, rankLabel;
+
+            if (streak > 30) {
+                maxDays = 365;
+                rankClass = 'rank-gold';
+                rankLabel = 'Gold';
+            } else if (streak > 7) {
+                maxDays = 30;
+                rankClass = 'rank-silver';
+                rankLabel = 'Silver';
+            } else {
+                maxDays = 7;
+                rankClass = 'rank-bronze';
+                rankLabel = 'Bronze';
+            }
+
+            // バーの長さ（100%を超えないように）
+            let barWidth = Math.min((streak / maxDays) * 100, 100);
 
             const div = document.createElement('div');
-            // completedクラスをつけるが、CSSで取り消し線などは無効化済
-            div.className = `habit-card ${isCompleted ? 'completed' : ''}`;
+            // ランククラスを追加
+            div.className = `habit-card ${isCompleted ? 'completed' : ''} ${rankClass}`;
             
-            // チェック円のスタイル (完了時のみ色をつける)
+            // チェック状態のスタイル
             const checkStyle = isCompleted 
                 ? `background-color: ${hColor}; border-color: ${hColor};` 
-                : `border-color: ${hColor};`; // 未完了でも枠線はテーマカラーにするならここ
+                : `border-color: ${hColor};`;
 
-            // アイコンの色 (常にテーマカラー)
             const iconStyle = `color: ${hColor};`;
 
             div.innerHTML = `
+                <div class="rank-badge">${rankLabel}</div>
                 <div class="streak-bar-bg">
                     <div class="streak-bar-fill" style="width: ${barWidth}%;"></div>
                 </div>
@@ -459,7 +481,7 @@
                         <div class="habit-icon" style="${iconStyle}">${hIcon}</div>
                         <div class="habit-text-group">
                             <span class="habit-title">${habit.title}</span>
-                            <span class="streak-info">🔥 ${streak}日連続</span>
+                            <span class="streak-info">🔥 ${streak}日 / 次の目標: ${maxDays}日</span>
                         </div>
                     </div>
                     
@@ -473,59 +495,44 @@
         });
     }
 
-    // --- ストリーク計算 (修正版) ---
+    // --- ストリーク計算 ---
     function calculateStreak(dates) {
         let streak = 0;
         let d = new Date();
         let checkStr = d.toISOString().split('T')[0];
         
-        // 1. 今日チェック済みの場合
         if (dates.includes(checkStr)) {
-            streak++; // 今日の分
-            // 昨日以前へ遡る
+            streak++; 
             while (true) {
                 d.setDate(d.getDate() - 1);
                 checkStr = d.toISOString().split('T')[0];
-                if (dates.includes(checkStr)) {
-                    streak++;
-                } else {
-                    break;
-                }
+                if (dates.includes(checkStr)) streak++;
+                else break;
             }
-        } 
-        // 2. 今日未チェックの場合
-        else {
-            // 昨日をチェック
+        } else {
             d.setDate(d.getDate() - 1);
             checkStr = d.toISOString().split('T')[0];
-            
             if (dates.includes(checkStr)) {
-                streak++; // 昨日の分
-                // さらに一昨日以前へ遡る
+                streak++;
                 while (true) {
                     d.setDate(d.getDate() - 1);
                     checkStr = d.toISOString().split('T')[0];
-                    if (dates.includes(checkStr)) {
-                        streak++;
-                    } else {
-                        break;
-                    }
+                    if (dates.includes(checkStr)) streak++;
+                    else break;
                 }
             } else {
-                // 昨日もやってなければ0
                 return 0;
             }
         }
         return streak;
     }
 
-    // --- 追加フロー (モーダル連携) ---
+    // --- 追加・削除・完了アクション ---
     addBtn.onclick = () => {
         const title = inputEl.value.trim();
         if (title) {
             draftTitle = title;
             inputEl.value = '';
-            // モーダルを開く
             modal.classList.add('active');
         }
     };
@@ -549,31 +556,26 @@
         }
     }
 
-    // --- 削除処理 ---
     window.deleteHabit = (index) => {
-        if(confirm('この習慣を削除しますか？')) {
+        if(confirm('削除しますか？')) {
             habits.splice(index, 1);
             localStorage.setItem('habits', JSON.stringify(habits));
             render();
         }
     };
 
-    // --- 完了切り替え ---
     window.toggleHabit = (index) => {
         const today = getToday();
         const dateIndex = habits[index].completedDates.indexOf(today);
-
         if (dateIndex === -1) {
             habits[index].completedDates.push(today);
         } else {
             habits[index].completedDates.splice(dateIndex, 1);
         }
-        
         localStorage.setItem('habits', JSON.stringify(habits));
         render();
     };
 
-    // 初回描画
     render();
 </script>
 
