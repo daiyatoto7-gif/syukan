@@ -11,10 +11,8 @@
             --card-bg: #1e1e1e;
             --text-main: #e0e0e0;
             --text-sub: #a0a0a0;
-            --bar-color: #00e676; /* 蛍光グリーン */
+            --bar-color: #00e676;
             --modal-bg: #252525;
-            
-            /* ランクカラー */
             --bronze: #cd7f32;
             --silver: #e0e0e0;
             --gold: #ffd700;
@@ -23,366 +21,183 @@
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
             background-color: var(--bg-color);
-            margin: 0;
-            padding: 20px;
-            color: var(--text-main);
-            padding-bottom: 100px;
-            user-select: none;
-            -webkit-tap-highlight-color: transparent;
+            margin: 0; padding: 20px; color: var(--text-main);
+            padding-bottom: 100px; user-select: none; -webkit-tap-highlight-color: transparent;
         }
 
-        h1 {
-            text-align: center;
-            font-size: 1.2rem;
-            margin-bottom: 20px;
-            color: var(--text-sub);
-            font-weight: normal;
-            letter-spacing: 2px;
-        }
+        h1 { text-align: center; font-size: 1.2rem; margin-bottom: 20px; color: var(--text-sub); font-weight: normal; letter-spacing: 2px; }
+        .container { max-width: 600px; margin: 0 auto; }
 
-        .container {
-            max-width: 600px;
-            margin: 0 auto;
-        }
-
-        /* --- 今日の進捗パネル --- */
+        /* 今日の進捗パネル */
         .progress-section {
-            background: linear-gradient(145deg, #2a2a2a, #1e1e1e);
-            padding: 20px;
-            border-radius: 20px;
-            margin-bottom: 25px;
-            box-shadow: 0 8px 16px rgba(0,0,0,0.3);
-            position: relative;
-            overflow: hidden;
+            background: linear-gradient(145deg, #2a2a2a, #1e1e1e); padding: 20px; border-radius: 20px;
+            margin-bottom: 25px; box-shadow: 0 8px 16px rgba(0,0,0,0.3); position: relative; overflow: hidden;
         }
-        .progress-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: end;
-            margin-bottom: 10px;
-            position: relative;
-            z-index: 2;
-        }
+        .progress-header { display: flex; justify-content: space-between; align-items: end; margin-bottom: 10px; position: relative; z-index: 2; }
         .progress-title { font-size: 14px; color: var(--text-sub); }
         .progress-percent { font-size: 32px; font-weight: bold; color: white; line-height: 1; }
         .progress-count { font-size: 16px; color: var(--text-sub); margin-left: 5px; }
-        
-        .main-progress-bar-bg {
-            height: 12px;
-            background: rgba(255,255,255,0.1);
-            border-radius: 6px;
-            overflow: hidden;
-            position: relative;
-            z-index: 2;
-        }
+        .main-progress-bar-bg { height: 12px; background: rgba(255,255,255,0.1); border-radius: 6px; overflow: hidden; position: relative; z-index: 2; }
         .main-progress-bar-fill {
-            height: 100%;
-            width: 0%;
-            background: var(--bar-color);
-            border-radius: 6px;
-            transition: width 0.6s cubic-bezier(0.22, 1, 0.36, 1);
-            box-shadow: 0 0 10px var(--bar-color);
+            height: 100%; width: 0%; background: var(--bar-color); border-radius: 6px;
+            transition: width 0.6s cubic-bezier(0.22, 1, 0.36, 1); box-shadow: 0 0 10px var(--bar-color);
         }
         .complete-msg {
-            position: absolute;
-            top: 50%; left: 50%;
-            transform: translate(-50%, -50%);
-            font-weight: bold;
-            color: rgba(255,255,255,0.1);
-            font-size: 40px;
-            pointer-events: none;
-            z-index: 1;
-            white-space: nowrap;
-            transition: color 0.5s;
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            font-weight: bold; color: rgba(255,255,255,0.1); font-size: 40px; pointer-events: none; z-index: 1;
+            white-space: nowrap; transition: color 0.5s;
         }
-        .progress-section.all-done .complete-msg {
-            color: rgba(0, 230, 118, 0.2);
-            text-shadow: 0 0 20px rgba(0, 230, 118, 0.5);
-        }
+        .progress-section.all-done .complete-msg { color: rgba(0, 230, 118, 0.2); text-shadow: 0 0 20px rgba(0, 230, 118, 0.5); }
 
-        /* --- 入力エリア --- */
+        /* 入力エリア */
         .input-area {
-            background-color: var(--card-bg);
-            padding: 15px;
-            border-radius: 16px;
-            margin-bottom: 15px;
-            display: flex;
-            gap: 10px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+            background-color: var(--card-bg); padding: 15px; border-radius: 16px; margin-bottom: 15px;
+            display: flex; gap: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.3);
         }
-
         input[type="text"] {
-            flex: 1;
-            padding: 12px;
-            background: #2c2c2c;
-            border: 1px solid #333;
-            border-radius: 8px;
-            font-size: 16px;
-            color: white;
-            outline: none;
+            flex: 1; padding: 12px; background: #2c2c2c; border: 1px solid #333; border-radius: 8px;
+            font-size: 16px; color: white; outline: none;
         }
-
         button#add-btn {
-            padding: 0 20px;
-            background-color: white;
-            color: black;
-            border: none;
-            border-radius: 8px;
-            font-weight: bold;
-            cursor: pointer;
-            white-space: nowrap;
+            padding: 0 20px; background-color: white; color: black; border: none; border-radius: 8px;
+            font-weight: bold; cursor: pointer; white-space: nowrap;
         }
         button#add-btn:active { transform: scale(0.95); }
 
-        /* --- フィルタボタン --- */
-        .filter-tabs {
-            display: flex;
-            justify-content: center;
-            margin-bottom: 25px;
-            background: var(--card-bg);
-            padding: 4px;
-            border-radius: 12px;
-        }
-        .filter-tab {
-            flex: 1;
-            padding: 10px;
-            text-align: center;
-            cursor: pointer;
-            border-radius: 8px;
-            font-size: 14px;
-            color: var(--text-sub);
-            transition: all 0.2s;
-        }
-        .filter-tab.active {
-            background-color: #333;
-            color: white;
-            font-weight: bold;
-        }
+        /* フィルタタブ */
+        .filter-tabs { display: flex; justify-content: center; margin-bottom: 25px; background: var(--card-bg); padding: 4px; border-radius: 12px; }
+        .filter-tab { flex: 1; padding: 10px; text-align: center; cursor: pointer; border-radius: 8px; font-size: 14px; color: var(--text-sub); transition: all 0.2s; }
+        .filter-tab.active { background-color: #333; color: white; font-weight: bold; }
 
-        /* --- 習慣カード --- */
+        /* 習慣カード */
         .habit-card {
-            background: var(--card-bg);
-            margin-bottom: 16px;
-            border-radius: 12px;
-            overflow: hidden;
-            position: relative;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+            background: var(--card-bg); margin-bottom: 16px; border-radius: 12px; overflow: hidden;
+            position: relative; box-shadow: 0 4px 6px rgba(0,0,0,0.2);
             transition: transform 0.1s cubic-bezier(0.4, 0.0, 0.2, 1), box-shadow 0.2s;
-            border: 1px solid transparent;
-            cursor: pointer;
+            border: 1px solid transparent; cursor: pointer;
         }
-        
-        /* ドラッグ中のスタイル */
         .sortable-ghost { opacity: 0.4; background: #333; }
-        .sortable-drag {
-            background: #2a2a2a;
-            box-shadow: 0 10px 20px rgba(0,0,0,0.5);
-            transform: scale(1.02);
-            z-index: 1000;
-        }
-
+        .sortable-drag { background: #2a2a2a; box-shadow: 0 10px 20px rgba(0,0,0,0.5); transform: scale(1.02); z-index: 1000; }
         .habit-card:active { transform: scale(0.98); }
+        .habit-card.bouncing { animation: bounce 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        @keyframes bounce { 0% { transform: scale(1); } 30% { transform: scale(0.95); } 50% { transform: scale(1.02); } 100% { transform: scale(1); } }
         
-        .habit-card.bouncing {
-            animation: bounce 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-        }
-        @keyframes bounce {
-            0% { transform: scale(1); }
-            30% { transform: scale(0.95); }
-            50% { transform: scale(1.02); }
-            100% { transform: scale(1); }
-        }
-        
-        /* ランク装飾 */
         .habit-card.rank-bronze { border-color: rgba(205, 127, 50, 0.5); }
         .habit-card.rank-silver { border-color: rgba(224, 224, 224, 0.5); }
         .habit-card.rank-gold   { border-color: rgba(255, 215, 0, 0.5); box-shadow: 0 0 15px rgba(255, 215, 0, 0.15); }
 
-        .card-content {
-            padding: 15px 20px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            z-index: 2;
-            position: relative;
-        }
+        .card-content { padding: 15px 20px; display: flex; align-items: center; justify-content: space-between; z-index: 2; position: relative; }
 
-        /* --- グリップ（スリム化） --- */
+        /* グリップ（スリム化） */
         .drag-handle {
-            /* タップしやすいように見えない余白は確保しつつ、見た目はスリムに */
-            width: 24px; 
-            height: 40px;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            gap: 3px;
-            margin-right: 8px; /* 余白削減 */
-            margin-left: -10px; /* 左端に寄せる */
-            opacity: 0.2;
-            cursor: grab;
-            touch-action: none; /* ここでのスクロールを無効化（即ドラッグのため） */
+            width: 24px; height: 40px; display: flex; flex-direction: column; justify-content: center; align-items: center;
+            gap: 3px; margin-right: 8px; margin-left: -10px; opacity: 0.2; cursor: grab; touch-action: none;
         }
-        .drag-dot { 
-            width: 3px; height: 3px; /* ドット小型化 */
-            background-color: white; border-radius: 50%; 
-        }
+        .drag-dot { width: 3px; height: 3px; background-color: white; border-radius: 50%; }
 
-        .rank-badge {
-            position: absolute; top: 0; right: 0; padding: 2px 8px;
-            font-size: 10px; font-weight: bold; border-bottom-left-radius: 8px;
-            color: #121212; z-index: 3;
-        }
+        .rank-badge { position: absolute; top: 0; right: 0; padding: 2px 8px; font-size: 10px; font-weight: bold; border-bottom-left-radius: 8px; color: #121212; z-index: 3; }
         .rank-bronze .rank-badge { background-color: var(--bronze); }
         .rank-silver .rank-badge { background-color: var(--silver); }
         .rank-gold .rank-badge   { background-color: var(--gold); }
 
-        .habit-info {
-            display: flex; align-items: center; gap: 15px; flex: 1;
-        }
-
-        .habit-icon {
-            font-size: 24px; width: 40px; height: 40px;
-            background: rgba(255,255,255,0.05); border-radius: 50%;
-            display: flex; align-items: center; justify-content: center; flex-shrink: 0;
-        }
-
+        .habit-info { display: flex; align-items: center; gap: 15px; flex: 1; }
+        .habit-icon { font-size: 24px; width: 40px; height: 40px; background: rgba(255,255,255,0.05); border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
         .habit-text-group { display: flex; flex-direction: column; }
         .habit-title { font-size: 16px; font-weight: 600; color: var(--text-main); }
-        
-        .stats-row {
-            display: flex; gap: 10px; font-size: 11px;
-            color: var(--text-sub); margin-top: 4px;
-        }
+        .stats-row { display: flex; gap: 10px; font-size: 11px; color: var(--text-sub); margin-top: 4px; }
         
         .check-circle {
             width: 28px; height: 28px; border-radius: 50%; border: 2px solid #555;
             display: flex; align-items: center; justify-content: center;
-            transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            background: transparent; margin-right: 15px; flex-shrink: 0;
+            transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275); background: transparent; margin-right: 15px; flex-shrink: 0;
         }
         .habit-card.completed .check-circle { transform: scale(1.1); }
         .check-circle::after {
-            content: ''; display: block; width: 6px; height: 10px;
-            border: solid black; border-width: 0 2px 2px 0;
-            transform: rotate(45deg) scale(0); opacity: 0;
-            transition: all 0.2s ease-out; 
+            content: ''; display: block; width: 6px; height: 10px; border: solid black; border-width: 0 2px 2px 0;
+            transform: rotate(45deg) scale(0); opacity: 0; transition: all 0.2s ease-out; 
         }
         .habit-card.completed .check-circle::after { opacity: 1; transform: rotate(45deg) scale(1); }
 
-        .streak-bar-bg {
-            position: absolute; bottom: 0; left: 0; width: 100%; height: 6px;
-            background: rgba(255,255,255,0.05);
-        }
+        .streak-bar-bg { position: absolute; bottom: 0; left: 0; width: 100%; height: 6px; background: rgba(255,255,255,0.05); }
         .streak-bar-fill {
-            height: 100%; width: 0%;
-            transition: width 0.6s cubic-bezier(0.22, 1, 0.36, 1);
-            background-color: var(--bar-color); border-radius: 0 4px 4px 0;
-            box-shadow: 0 0 10px var(--bar-color);
+            height: 100%; width: 0%; transition: width 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+            background-color: var(--bar-color); border-radius: 0 4px 4px 0; box-shadow: 0 0 10px var(--bar-color);
         }
 
-        .menu-btn {
-            background: none; border: none; color: #666;
-            font-size: 20px; padding: 10px 5px; cursor: pointer; z-index: 10;
-        }
+        .menu-btn { background: none; border: none; color: #666; font-size: 20px; padding: 10px 5px; cursor: pointer; z-index: 10; }
 
         /* モーダル */
         .modal-overlay {
-            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(0,0,0,0.8); display: flex; align-items: center; justify-content: center;
-            z-index: 1000; opacity: 0; pointer-events: none;
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.8);
+            display: flex; align-items: center; justify-content: center; z-index: 1000; opacity: 0; pointer-events: none;
             transition: opacity 0.2s; backdrop-filter: blur(5px);
         }
         .modal-overlay.active { opacity: 1; pointer-events: auto; }
         .modal-content {
-            background: var(--modal-bg); padding: 25px; border-radius: 20px;
-            width: 90%; max-width: 350px; text-align: center;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-            transform: scale(0.9); transition: transform 0.2s;
+            background: var(--modal-bg); padding: 25px; border-radius: 20px; width: 90%; max-width: 350px; text-align: center;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5); transform: scale(0.9); transition: transform 0.2s;
         }
         .modal-overlay.active .modal-content { transform: scale(1); }
-
         .modal-title { margin-bottom: 20px; font-size: 18px; font-weight: bold; }
         .modal-section { margin-bottom: 20px; }
         .modal-label { display: block; margin-bottom: 10px; color: var(--text-sub); font-size: 12px; }
         .modal-input-text {
-            width: 100%; padding: 12px; background: #333;
-            border: 1px solid #444; border-radius: 8px;
+            width: 100%; padding: 12px; background: #333; border: 1px solid #444; border-radius: 8px;
             color: white; font-size: 16px; outline: none; box-sizing: border-box; text-align: center;
         }
-        select#modal-icon-select {
-            background: #333; color: white; border: none;
-            padding: 12px; border-radius: 12px; font-size: 28px;
-            width: 100%; text-align: center; appearance: none;
-        }
+        select#modal-icon-select { background: #333; color: white; border: none; padding: 12px; border-radius: 12px; font-size: 28px; width: 100%; text-align: center; appearance: none; }
         .color-selector { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
-        .color-dot {
-            width: 40px; height: 40px; border-radius: 50%;
-            cursor: pointer; border: 3px solid transparent; box-sizing: border-box;
-            transition: transform 0.2s;
-        }
+        .color-dot { width: 40px; height: 40px; border-radius: 50%; cursor: pointer; border: 3px solid transparent; box-sizing: border-box; transition: transform 0.2s; }
         .color-dot.selected { border-color: white; transform: scale(1.1); }
         .modal-actions { display: flex; gap: 10px; margin-top: 25px; }
-        .modal-btn {
-            flex: 1; padding: 14px; border: none; border-radius: 12px;
-            font-weight: bold; font-size: 16px; cursor: pointer;
-        }
+        .modal-btn { flex: 1; padding: 14px; border: none; border-radius: 12px; font-weight: bold; font-size: 16px; cursor: pointer; }
         .btn-cancel { background: #333; color: white; }
         .btn-confirm { background: white; color: black; }
 
         /* アクションシート */
-        .action-sheet-overlay {
-            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(0,0,0,0.6); z-index: 2000;
-            opacity: 0; pointer-events: none; transition: opacity 0.2s;
-        }
+        .action-sheet-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.6); z-index: 2000; opacity: 0; pointer-events: none; transition: opacity 0.2s; }
         .action-sheet-overlay.active { opacity: 1; pointer-events: auto; }
         .action-sheet {
-            position: absolute; bottom: 0; left: 0; right: 0;
-            background: var(--card-bg); border-top-left-radius: 20px; border-top-right-radius: 20px;
-            padding: 20px; transform: translateY(100%); transition: transform 0.3s;
+            position: absolute; bottom: 0; left: 0; right: 0; background: var(--card-bg);
+            border-top-left-radius: 20px; border-top-right-radius: 20px; padding: 20px;
+            transform: translateY(100%); transition: transform 0.3s;
         }
         .action-sheet-overlay.active .action-sheet { transform: translateY(0); }
         .action-btn {
-            width: 100%; padding: 15px; margin-bottom: 10px;
-            background: #333; border: none; border-radius: 12px;
-            color: white; font-size: 16px; font-weight: bold; cursor: pointer;
-            display: flex; align-items: center; justify-content: center; gap: 10px;
+            width: 100%; padding: 15px; margin-bottom: 10px; background: #333; border: none; border-radius: 12px;
+            color: white; font-size: 16px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px;
         }
         .action-btn.delete { color: #ff5252; background: rgba(255, 82, 82, 0.1); }
         .action-btn.cancel { background: transparent; color: #888; margin-bottom: 0; }
+        .action-btn.backup { color: #40c4ff; background: rgba(64, 196, 255, 0.1); }
+
     </style>
 </head>
 <body>
 
 <div class="container">
     <h1>HABIT TRACKER</h1>
-
     <div class="progress-section" id="progress-section">
         <div class="complete-msg">COMPLETE!</div>
         <div class="progress-header">
             <span class="progress-title">今日の進捗</span>
-            <div>
-                <span class="progress-percent" id="prog-percent">0%</span>
-                <span class="progress-count" id="prog-count">(0/0)</span>
-            </div>
+            <div><span class="progress-percent" id="prog-percent">0%</span><span class="progress-count" id="prog-count">(0/0)</span></div>
         </div>
-        <div class="main-progress-bar-bg">
-            <div class="main-progress-bar-fill" id="prog-bar"></div>
-        </div>
+        <div class="main-progress-bar-bg"><div class="main-progress-bar-fill" id="prog-bar"></div></div>
     </div>
-    
     <div class="input-area">
         <input type="text" id="new-habit" placeholder="新しい習慣を追加...">
         <button id="add-btn">追加</button>
     </div>
-
     <div class="filter-tabs">
         <div class="filter-tab active" id="tab-all" onclick="setFilter('all')">すべて</div>
         <div class="filter-tab" id="tab-unchecked" onclick="setFilter('unchecked')">未完了のみ</div>
     </div>
-
     <div id="habit-list"></div>
+    
+    <div style="text-align: center; margin-top: 30px;">
+        <button class="menu-btn" onclick="openGlobalMenu()">⚙️ 設定・バックアップ</button>
+    </div>
 </div>
 
 <div class="modal-overlay" id="edit-modal">
@@ -395,24 +210,12 @@
         <div class="modal-section">
             <span class="modal-label">アイコン</span>
             <select id="modal-icon-select">
-                <option value="💪">💪 筋トレ</option>
-                <option value="📚">📚 読書</option>
-                <option value="🍳">🍳 料理</option>
-                <option value="🧹">🧹 掃除</option>
-                <option value="💻">💻 作業</option>
-                <option value="🏃">🏃 ランニング</option>
-                <option value="💧">💧 水分補給</option>
-                <option value="💊">💊 サプリ</option>
-                <option value="💤">💤 睡眠</option>
-                <option value="💰">💰 貯金</option>
-                <option value="📝">📝 日記</option>
-                <option value="🎸">🎸 趣味</option>
+                <option value="💪">💪 筋トレ</option><option value="📚">📚 読書</option><option value="🍳">🍳 料理</option><option value="🧹">🧹 掃除</option>
+                <option value="💻">💻 作業</option><option value="🏃">🏃 ランニング</option><option value="💧">💧 水分補給</option><option value="💊">💊 サプリ</option>
+                <option value="💤">💤 睡眠</option><option value="💰">💰 貯金</option><option value="📝">📝 日記</option><option value="🎸">🎸 趣味</option>
             </select>
         </div>
-        <div class="modal-section">
-            <span class="modal-label">テーマカラー</span>
-            <div class="color-selector" id="modal-color-selector"></div>
-        </div>
+        <div class="modal-section"><span class="modal-label">テーマカラー</span><div class="color-selector" id="modal-color-selector"></div></div>
         <div class="modal-actions">
             <button class="modal-btn btn-cancel" onclick="closeEditModal()">キャンセル</button>
             <button class="modal-btn btn-confirm" onclick="saveHabitData()">保存</button>
@@ -428,8 +231,16 @@
     </div>
 </div>
 
+<div class="action-sheet-overlay" id="global-sheet" onclick="closeGlobalMenu()">
+    <div class="action-sheet" onclick="event.stopPropagation()">
+        <button class="action-btn backup" onclick="exportData()">📤 バックアップ保存</button>
+        <button class="action-btn backup" onclick="document.getElementById('file-input').click()">📥 データ復元 (インポート)</button>
+        <input type="file" id="file-input" style="display: none;" onchange="importData(this)">
+        <button class="action-btn cancel" onclick="closeGlobalMenu()">閉じる</button>
+    </div>
+</div>
+
 <script>
-    // --- 音声生成 ---
     const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
     function playPopSound() {
         if (audioCtx.state === 'suspended') audioCtx.resume();
@@ -442,11 +253,8 @@
         osc.connect(gain); gain.connect(audioCtx.destination);
         osc.start(); osc.stop(audioCtx.currentTime + 0.15);
     }
-    function triggerHaptic() {
-        if (navigator.vibrate) navigator.vibrate(15);
-    }
+    function triggerHaptic() { if (navigator.vibrate) navigator.vibrate(15); }
 
-    // --- データ変数 ---
     let habits = JSON.parse(localStorage.getItem('habits')) || [];
     let filterMode = 'all'; 
     let activeIndex = null; 
@@ -456,7 +264,6 @@
     const colors = ['#ff5252', '#ff9800', '#ffd740', '#69f0ae', '#40c4ff', '#7c4dff', '#ff4081'];
     let selectedColor = colors[3];
 
-    // DOM要素
     const habitListEl = document.getElementById('habit-list');
     const inputEl = document.getElementById('new-habit');
     const addBtn = document.getElementById('add-btn');
@@ -470,19 +277,54 @@
     const modalIconSelect = document.getElementById('modal-icon-select');
     const modalColorSelector = document.getElementById('modal-color-selector');
     const actionSheet = document.getElementById('action-sheet');
+    const globalSheet = document.getElementById('global-sheet');
 
     const getToday = () => new Date().toISOString().split('T')[0];
 
-    // --- SortableJS 設定変更 ---
+    // --- バックアップ機能 ---
+    function exportData() {
+        const dataStr = JSON.stringify(habits);
+        const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+        const exportFileDefaultName = 'habit_tracker_backup.json';
+        const linkElement = document.createElement('a');
+        linkElement.setAttribute('href', dataUri);
+        linkElement.setAttribute('download', exportFileDefaultName);
+        linkElement.click();
+        closeGlobalMenu();
+        alert('バックアップファイルを保存しました。\n機種変更時はこのファイルを読み込んでください。');
+    }
+
+    function importData(input) {
+        const file = input.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            try {
+                const loadedHabits = JSON.parse(e.target.result);
+                if (Array.isArray(loadedHabits)) {
+                    habits = loadedHabits;
+                    localStorage.setItem('habits', JSON.stringify(habits));
+                    render();
+                    alert('データを復元しました！');
+                } else {
+                    alert('ファイル形式が正しくありません');
+                }
+            } catch (err) {
+                alert('読み込みに失敗しました');
+            }
+        };
+        reader.readAsText(file);
+        closeGlobalMenu();
+        input.value = ''; // リセット
+    }
+
+    // --- グローバルメニュー ---
+    window.openGlobalMenu = () => { globalSheet.classList.add('active'); };
+    window.closeGlobalMenu = () => { globalSheet.classList.remove('active'); };
+
     let sortableInstance = Sortable.create(habitListEl, {
-        animation: 150,
-        handle: '.drag-handle', // グリップをつかんだ時だけドラッグ可能
-        delay: 0, // 遅延なし（即ドラッグ）
-        disabled: false,
-        onStart: function() {
-            isDragging = true;
-            triggerHaptic();
-        },
+        animation: 150, handle: '.drag-handle', delay: 0, disabled: false,
+        onStart: function() { isDragging = true; triggerHaptic(); },
         onEnd: function (evt) {
             setTimeout(() => { isDragging = false; }, 100);
             const item = habits.splice(evt.oldIndex, 1)[0];
@@ -491,16 +333,13 @@
         }
     });
 
-    // --- カラーパレット初期化 ---
     colors.forEach(color => {
         const dot = document.createElement('div');
-        dot.className = 'color-dot';
-        dot.style.backgroundColor = color;
+        dot.className = 'color-dot'; dot.style.backgroundColor = color;
         dot.onclick = () => {
             playPopSound();
             document.querySelectorAll('.color-dot').forEach(d => d.classList.remove('selected'));
-            dot.classList.add('selected');
-            selectedColor = color;
+            dot.classList.add('selected'); selectedColor = color;
         };
         modalColorSelector.appendChild(dot);
     });
@@ -509,94 +348,63 @@
         const today = getToday();
         const total = habits.length;
         if (total === 0) {
-            progPercentEl.textContent = "0%";
-            progCountEl.textContent = "(0/0)";
-            progBarEl.style.width = "0%";
-            progSectionEl.classList.remove('all-done');
-            return;
+            progPercentEl.textContent = "0%"; progCountEl.textContent = "(0/0)";
+            progBarEl.style.width = "0%"; progSectionEl.classList.remove('all-done'); return;
         }
         const done = habits.filter(h => h.completedDates.includes(today)).length;
         const percent = Math.round((done / total) * 100);
-        progPercentEl.textContent = `${percent}%`;
-        progCountEl.textContent = `(${done}/${total})`;
+        progPercentEl.textContent = `${percent}%`; progCountEl.textContent = `(${done}/${total})`;
         progBarEl.style.width = `${percent}%`;
-        if (percent === 100) progSectionEl.classList.add('all-done');
-        else progSectionEl.classList.remove('all-done');
+        if (percent === 100) progSectionEl.classList.add('all-done'); else progSectionEl.classList.remove('all-done');
     }
 
     function setFilter(mode) {
-        playPopSound();
-        filterMode = mode;
+        playPopSound(); filterMode = mode;
         document.getElementById('tab-all').classList.toggle('active', mode === 'all');
         document.getElementById('tab-unchecked').classList.toggle('active', mode === 'unchecked');
-        
-        if (mode === 'all') {
-            sortableInstance.option("disabled", false);
-        } else {
-            sortableInstance.option("disabled", true);
-        }
-        
+        if (mode === 'all') sortableInstance.option("disabled", false); else sortableInstance.option("disabled", true);
         render();
     }
 
     function render() {
-        habitListEl.innerHTML = '';
-        updateProgress();
-        const today = getToday();
-
+        habitListEl.innerHTML = ''; updateProgress(); const today = getToday();
         const visibleHabits = habits.map((h, i) => ({...h, originalIndex: i})).filter(h => {
-            if (filterMode === 'all') return true;
-            return !h.completedDates.includes(today);
+            if (filterMode === 'all') return true; return !h.completedDates.includes(today);
         });
 
-        if (visibleHabits.length === 0) {
-            habitListEl.innerHTML = '<p style="text-align:center; color:#555; margin-top:40px;">リストは空です</p>';
-            return;
-        }
+        if (visibleHabits.length === 0) { habitListEl.innerHTML = '<p style="text-align:center; color:#555; margin-top:40px;">リストは空です</p>'; return; }
 
         visibleHabits.forEach((habit) => {
             const index = habit.originalIndex;
-            const hIcon = habit.icon || '📝';
-            const hColor = habit.color || '#69f0ae';
+            const hIcon = habit.icon || '📝'; const hColor = habit.color || '#69f0ae';
             const isCompleted = habit.completedDates.includes(today);
             const streak = calculateStreak(habit.completedDates);
             const totalDays = habit.completedDates.length;
-            
             let maxDays, rankClass, rankLabel;
             if (streak > 30) { maxDays = 365; rankClass = 'rank-gold'; rankLabel = 'Gold'; } 
             else if (streak > 7) { maxDays = 30; rankClass = 'rank-silver'; rankLabel = 'Silver'; } 
             else { maxDays = 7; rankClass = 'rank-bronze'; rankLabel = 'Bronze'; }
-
             let barWidth = Math.min((streak / maxDays) * 100, 100);
 
             const div = document.createElement('div');
             div.className = `habit-card ${isCompleted ? 'completed' : ''} ${rankClass}`;
             div.id = `card-${index}`;
-
             const checkStyle = isCompleted ? `background-color: ${hColor}; border-color: ${hColor};` : `border-color: ${hColor};`;
             const iconStyle = `color: ${hColor};`;
 
             div.innerHTML = `
                 <div class="rank-badge">${rankLabel}</div>
                 <div class="streak-bar-bg"><div class="streak-bar-fill" style="width: ${barWidth}%;"></div></div>
-                
                 <div class="card-content" onclick="handleCardClick(${index})">
                     <div class="drag-handle"><div class="drag-dot"></div><div class="drag-dot"></div><div class="drag-dot"></div></div>
-                    
                     <div class="check-circle" style="${checkStyle}"></div>
-                    
                     <div class="habit-info">
                         <div class="habit-icon" style="${iconStyle}">${hIcon}</div>
                         <div class="habit-text-group" style="margin-left: 15px;">
                             <span class="habit-title">${habit.title}</span>
-                            <div class="stats-row">
-                                <span>🔥 連続: ${streak}日</span>
-                                <span>|</span>
-                                <span>🏆 累計: ${totalDays}日</span>
-                            </div>
+                            <div class="stats-row"><span>🔥 連続: ${streak}日</span><span>|</span><span>🏆 累計: ${totalDays}日</span></div>
                         </div>
                     </div>
-                    
                     <button class="menu-btn" onclick="openActionSheet(event, ${index})">⋮</button>
                 </div>
             `;
@@ -605,142 +413,77 @@
     }
 
     function calculateStreak(dates) {
-        let streak = 0;
-        let d = new Date();
-        let checkStr = d.toISOString().split('T')[0];
+        let streak = 0; let d = new Date(); let checkStr = d.toISOString().split('T')[0];
         if (dates.includes(checkStr)) {
             streak++; 
-            while (true) {
-                d.setDate(d.getDate() - 1);
-                checkStr = d.toISOString().split('T')[0];
-                if (dates.includes(checkStr)) streak++; else break;
-            }
+            while (true) { d.setDate(d.getDate() - 1); checkStr = d.toISOString().split('T')[0]; if (dates.includes(checkStr)) streak++; else break; }
         } else {
-            d.setDate(d.getDate() - 1);
-            checkStr = d.toISOString().split('T')[0];
+            d.setDate(d.getDate() - 1); checkStr = d.toISOString().split('T')[0];
             if (dates.includes(checkStr)) {
                 streak++;
-                while (true) {
-                    d.setDate(d.getDate() - 1);
-                    checkStr = d.toISOString().split('T')[0];
-                    if (dates.includes(checkStr)) streak++; else break;
-                }
+                while (true) { d.setDate(d.getDate() - 1); checkStr = d.toISOString().split('T')[0]; if (dates.includes(checkStr)) streak++; else break; }
             } else { return 0; }
         }
         return streak;
     }
 
     window.handleCardClick = (index) => {
-        if (isDragging) return;
-        playPopSound();
-        triggerHaptic();
+        if (isDragging) return; playPopSound(); triggerHaptic();
         const card = document.getElementById(`card-${index}`);
-        card.classList.remove('bouncing');
-        void card.offsetWidth; 
-        card.classList.add('bouncing');
+        card.classList.remove('bouncing'); void card.offsetWidth; card.classList.add('bouncing');
         toggleHabit(index);
     };
 
     window.toggleHabit = (index) => {
-        const today = getToday();
-        const dateIndex = habits[index].completedDates.indexOf(today);
+        const today = getToday(); const dateIndex = habits[index].completedDates.indexOf(today);
         setTimeout(() => {
-            if (dateIndex === -1) habits[index].completedDates.push(today);
-            else habits[index].completedDates.splice(dateIndex, 1);
-            localStorage.setItem('habits', JSON.stringify(habits));
-            render();
+            if (dateIndex === -1) habits[index].completedDates.push(today); else habits[index].completedDates.splice(dateIndex, 1);
+            localStorage.setItem('habits', JSON.stringify(habits)); render();
         }, 150);
     };
 
     window.openActionSheet = (e, index) => {
-        e.stopPropagation();
-        if (isDragging) return;
-        activeIndex = index;
-        actionSheet.classList.add('active');
+        e.stopPropagation(); if (isDragging) return; activeIndex = index; actionSheet.classList.add('active');
     };
-    window.closeActionSheet = () => {
-        actionSheet.classList.remove('active');
-    };
+    window.closeActionSheet = () => { actionSheet.classList.remove('active'); };
 
-    addBtn.onclick = () => {
-        const title = inputEl.value.trim();
-        startAdd(title);
-    };
-
+    addBtn.onclick = () => { const title = inputEl.value.trim(); startAdd(title); };
     function startAdd(initialTitle) {
-        playPopSound();
-        isEditing = false;
-        activeIndex = null;
-        modalTitle.textContent = "新しい習慣";
-        modalInputName.value = initialTitle;
-        inputEl.value = '';
-        selectedColor = colors[3];
-        updateColorSelection();
-        editModal.classList.add('active');
+        playPopSound(); isEditing = false; activeIndex = null;
+        modalTitle.textContent = "新しい習慣"; modalInputName.value = initialTitle; inputEl.value = '';
+        selectedColor = colors[3]; updateColorSelection(); editModal.classList.add('active');
     }
-
     window.openEditModal = () => {
-        closeActionSheet();
-        isEditing = true;
-        const habit = habits[activeIndex];
-        modalTitle.textContent = "習慣を編集";
-        modalInputName.value = habit.title;
-        modalIconSelect.value = habit.icon;
-        selectedColor = habit.color;
-        updateColorSelection();
+        closeActionSheet(); isEditing = true; const habit = habits[activeIndex];
+        modalTitle.textContent = "習慣を編集"; modalInputName.value = habit.title;
+        modalIconSelect.value = habit.icon; selectedColor = habit.color; updateColorSelection();
         editModal.classList.add('active');
     };
-
-    function closeEditModal() {
-        editModal.classList.remove('active');
-    }
-
+    function closeEditModal() { editModal.classList.remove('active'); }
     function updateColorSelection() {
         document.querySelectorAll('.color-dot').forEach(d => {
             d.classList.remove('selected');
             const modalColorSelector = document.getElementById('modal-color-selector');
             modalColorSelector.innerHTML = '';
             colors.forEach(color => {
-                const dot = document.createElement('div');
-                dot.className = 'color-dot';
-                dot.style.backgroundColor = color;
+                const dot = document.createElement('div'); dot.className = 'color-dot'; dot.style.backgroundColor = color;
                 if (color === selectedColor) dot.classList.add('selected');
-                dot.onclick = () => {
-                    playPopSound();
-                    selectedColor = color;
-                    updateColorSelection();
-                };
+                dot.onclick = () => { playPopSound(); selectedColor = color; updateColorSelection(); };
                 modalColorSelector.appendChild(dot);
             });
         });
     }
-
     window.saveHabitData = () => {
-        const name = modalInputName.value.trim();
-        if (!name) { alert('習慣の名前を入力してください'); return; }
-        playPopSound();
-        const newData = { title: name, icon: modalIconSelect.value, color: selectedColor };
-        if (isEditing && activeIndex !== null) {
-            habits[activeIndex] = { ...habits[activeIndex], ...newData };
-        } else {
-            habits.push({ ...newData, completedDates: [] });
-        }
-        localStorage.setItem('habits', JSON.stringify(habits));
-        render();
-        closeEditModal();
+        const name = modalInputName.value.trim(); if (!name) { alert('習慣の名前を入力してください'); return; }
+        playPopSound(); const newData = { title: name, icon: modalIconSelect.value, color: selectedColor };
+        if (isEditing && activeIndex !== null) habits[activeIndex] = { ...habits[activeIndex], ...newData };
+        else habits.push({ ...newData, completedDates: [] });
+        localStorage.setItem('habits', JSON.stringify(habits)); render(); closeEditModal();
     };
-
     window.deleteHabit = () => {
-        if(confirm('本当に削除しますか？\n（積み上げた記録も消えます）')) {
-            habits.splice(activeIndex, 1);
-            localStorage.setItem('habits', JSON.stringify(habits));
-            render();
-            closeActionSheet();
-        }
+        if(confirm('本当に削除しますか？\n（積み上げた記録も消えます）')) { habits.splice(activeIndex, 1); localStorage.setItem('habits', JSON.stringify(habits)); render(); closeActionSheet(); }
     };
-
     render();
 </script>
-
 </body>
 </html>
