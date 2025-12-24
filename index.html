@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>習慣トラッカー</title>
     <style>
         :root {
@@ -26,6 +26,8 @@
             padding: 20px;
             color: var(--text-main);
             padding-bottom: 80px;
+            user-select: none; /* テキスト選択を防いでアプリっぽくする */
+            -webkit-tap-highlight-color: transparent; /* タップ時の青い枠を消す */
         }
 
         h1 {
@@ -47,7 +49,7 @@
             background-color: var(--card-bg);
             padding: 15px;
             border-radius: 16px;
-            margin-bottom: 15px; /* 下のマージンを少し詰める */
+            margin-bottom: 15px;
             display: flex;
             gap: 10px;
             box-shadow: 0 4px 6px rgba(0,0,0,0.3);
@@ -63,7 +65,6 @@
             color: white;
             outline: none;
         }
-        input[type="text"]::placeholder { color: #666; }
 
         button#add-btn {
             padding: 0 20px;
@@ -75,8 +76,9 @@
             cursor: pointer;
             white-space: nowrap;
         }
+        button#add-btn:active { transform: scale(0.95); }
 
-        /* --- フィルタボタン (位置変更) --- */
+        /* --- フィルタボタン --- */
         .filter-tabs {
             display: flex;
             justify-content: center;
@@ -101,7 +103,7 @@
             font-weight: bold;
         }
 
-        /* --- 習慣カード --- */
+        /* --- 習慣カード（アニメーション強化） --- */
         .habit-card {
             background: var(--card-bg);
             margin-bottom: 16px;
@@ -109,14 +111,33 @@
             overflow: hidden;
             position: relative;
             box-shadow: 0 4px 6px rgba(0,0,0,0.2);
-            transition: transform 0.1s;
-            border: 1px solid transparent; /* ランク装飾用 */
+            /* バウンスアニメーションの準備 */
+            transition: transform 0.1s cubic-bezier(0.4, 0.0, 0.2, 1), border-color 0.2s;
+            border: 1px solid transparent;
+            cursor: pointer;
+        }
+        
+        /* 押した瞬間の縮小 */
+        .habit-card:active {
+            transform: scale(0.96);
+        }
+        
+        /* バウンスアニメーション用クラス */
+        .habit-card.bouncing {
+            animation: bounce 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        @keyframes bounce {
+            0% { transform: scale(1); }
+            30% { transform: scale(0.95); }
+            50% { transform: scale(1.02); }
+            100% { transform: scale(1); }
         }
         
         /* ランク別の装飾 */
         .habit-card.rank-bronze { border-color: rgba(205, 127, 50, 0.5); }
         .habit-card.rank-silver { border-color: rgba(224, 224, 224, 0.5); }
-        .habit-card.rank-gold   { border-color: rgba(255, 215, 0, 0.5); box-shadow: 0 0 10px rgba(255, 215, 0, 0.1); }
+        .habit-card.rank-gold   { border-color: rgba(255, 215, 0, 0.5); box-shadow: 0 0 15px rgba(255, 215, 0, 0.15); }
 
         .card-content {
             padding: 15px 20px;
@@ -127,7 +148,6 @@
             position: relative;
         }
 
-        /* ランクバッジ（右上） */
         .rank-badge {
             position: absolute;
             top: 0;
@@ -160,24 +180,11 @@
             justify-content: center;
         }
 
-        .habit-text-group {
-            display: flex;
-            flex-direction: column;
-        }
+        .habit-text-group { display: flex; flex-direction: column; }
+        .habit-title { font-size: 16px; font-weight: 600; color: var(--text-main); }
+        .streak-info { font-size: 12px; color: var(--text-sub); margin-top: 2px; }
 
-        .habit-title {
-            font-size: 16px;
-            font-weight: 600;
-            color: var(--text-main);
-        }
-        
-        .streak-info {
-            font-size: 12px;
-            color: var(--text-sub);
-            margin-top: 2px;
-        }
-
-        /* チェックボックス */
+        /* チェックボックス（アニメーション強化） */
         .check-circle {
             width: 28px;
             height: 28px;
@@ -186,10 +193,13 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            cursor: pointer;
-            transition: all 0.2s;
+            transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
             background: transparent;
         }
+        .habit-card.completed .check-circle {
+            transform: scale(1.1); /* 完了時に少し大きくなる */
+        }
+        
         .check-circle::after {
             content: '';
             display: block;
@@ -197,13 +207,16 @@
             height: 10px;
             border: solid black;
             border-width: 0 2px 2px 0;
-            transform: rotate(45deg);
+            transform: rotate(45deg) scale(0); /* 最初は隠す */
             opacity: 0;
-            margin-bottom: 2px;
+            transition: all 0.2s ease-out; 
         }
-        .habit-card.completed .check-circle::after { opacity: 1; }
+        .habit-card.completed .check-circle::after {
+            opacity: 1;
+            transform: rotate(45deg) scale(1); /* ポンッと出る */
+        }
 
-        /* --- 連続バー (Streak Bar) --- */
+        /* 連続バー */
         .streak-bar-bg {
             position: absolute;
             bottom: 0;
@@ -215,24 +228,23 @@
         .streak-bar-fill {
             height: 100%;
             width: 0%;
-            transition: width 0.5s ease-out;
-            background-color: var(--bar-color); /* 蛍光グリーン */
+            transition: width 0.6s cubic-bezier(0.22, 1, 0.36, 1); /* なめらかに伸びる */
+            background-color: var(--bar-color);
             border-radius: 0 4px 4px 0;
-            box-shadow: 0 0 8px var(--bar-color); /* 少し光らせる */
+            box-shadow: 0 0 10px var(--bar-color);
         }
 
-        /* 削除ボタン */
         .delete-btn {
             background: none;
             border: none;
             color: #555;
             font-size: 18px;
-            cursor: pointer;
-            padding: 5px 10px;
+            padding: 10px; /* タップ領域拡大 */
             margin-left: 5px;
+            z-index: 10;
         }
 
-        /* --- モーダル --- */
+        /* モーダル */
         .modal-overlay {
             position: fixed;
             top: 0; left: 0; right: 0; bottom: 0;
@@ -244,76 +256,56 @@
             opacity: 0;
             pointer-events: none;
             transition: opacity 0.2s;
+            backdrop-filter: blur(5px);
         }
-        .modal-overlay.active {
-            opacity: 1;
-            pointer-events: auto;
-        }
+        .modal-overlay.active { opacity: 1; pointer-events: auto; }
         .modal-content {
             background: var(--modal-bg);
             padding: 25px;
-            border-radius: 16px;
+            border-radius: 20px;
             width: 90%;
             max-width: 350px;
             text-align: center;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            transform: scale(0.9);
+            transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
-        .modal-title {
-            margin-bottom: 20px;
-            font-size: 18px;
-            font-weight: bold;
-        }
+        .modal-overlay.active .modal-content { transform: scale(1); }
+
+        .modal-title { margin-bottom: 20px; font-size: 18px; font-weight: bold; }
         .modal-section { margin-bottom: 20px; }
-        .modal-label { 
-            display: block; 
-            margin-bottom: 10px; 
-            color: var(--text-sub); 
-            font-size: 12px;
-        }
+        .modal-label { display: block; margin-bottom: 10px; color: var(--text-sub); font-size: 12px; }
+        
         select#modal-icon-select {
             background: #333;
             color: white;
             border: none;
-            padding: 10px 20px;
-            border-radius: 8px;
-            font-size: 24px;
+            padding: 12px;
+            border-radius: 12px;
+            font-size: 28px;
             width: 100%;
             text-align: center;
             appearance: none;
         }
-        .color-selector {
-            display: flex;
-            gap: 10px;
-            justify-content: center;
-            flex-wrap: wrap;
-        }
+        .color-selector { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
         .color-dot {
-            width: 35px;
-            height: 35px;
+            width: 40px; height: 40px;
             border-radius: 50%;
             cursor: pointer;
-            border: 2px solid transparent;
+            border: 3px solid transparent;
             box-sizing: border-box;
+            transition: transform 0.2s;
         }
-        .color-dot.selected {
-            border-color: white;
-            transform: scale(1.1);
-        }
-        .modal-actions {
-            display: flex;
-            gap: 10px;
-            margin-top: 25px;
-        }
+        .color-dot:active { transform: scale(0.9); }
+        .color-dot.selected { border-color: white; transform: scale(1.1); }
+        
+        .modal-actions { display: flex; gap: 10px; margin-top: 25px; }
         .modal-btn {
-            flex: 1;
-            padding: 12px;
-            border: none;
-            border-radius: 8px;
-            font-weight: bold;
-            cursor: pointer;
+            flex: 1; padding: 14px; border: none; border-radius: 12px;
+            font-weight: bold; font-size: 16px; cursor: pointer;
         }
-        .btn-cancel { background: #444; color: white; }
+        .btn-cancel { background: #333; color: white; }
         .btn-confirm { background: white; color: black; }
-
     </style>
 </head>
 <body>
@@ -331,14 +323,12 @@
         <div class="filter-tab" id="tab-unchecked" onclick="setFilter('unchecked')">未完了のみ</div>
     </div>
 
-    <div id="habit-list">
-        </div>
+    <div id="habit-list"></div>
 </div>
 
 <div class="modal-overlay" id="modal">
     <div class="modal-content">
         <div class="modal-title">アイコンと色を設定</div>
-        
         <div class="modal-section">
             <span class="modal-label">アイコン</span>
             <select id="modal-icon-select">
@@ -356,13 +346,10 @@
                 <option value="🎸">🎸 趣味</option>
             </select>
         </div>
-
         <div class="modal-section">
             <span class="modal-label">テーマカラー</span>
-            <div class="color-selector" id="modal-color-selector">
-                </div>
+            <div class="color-selector" id="modal-color-selector"></div>
         </div>
-
         <div class="modal-actions">
             <button class="modal-btn btn-cancel" onclick="closeModal()">キャンセル</button>
             <button class="modal-btn btn-confirm" onclick="confirmAdd()">決定</button>
@@ -371,19 +358,48 @@
 </div>
 
 <script>
-    // --- 初期設定 ---
+    // --- 効果音データ (Base64) ---
+    // 軽量な「ポンッ」という音
+    const popSound = new Audio("data:audio/wav;base64,UklGRl9vT1BXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YU");
+    // ※容量削減のため短いダミーですが、実際には以下のJSで音程を変えて鳴らします
+
+    // 実際の「ポンッ」音をWeb Audio APIで生成（外部ファイル不要で高音質）
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    
+    function playPopSound() {
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        const oscillator = audioCtx.createOscillator();
+        const gainNode = audioCtx.createGain();
+        
+        oscillator.type = 'sine';
+        oscillator.frequency.setValueAtTime(800, audioCtx.currentTime); // 開始音程
+        oscillator.frequency.exponentialRampToValueAtTime(100, audioCtx.currentTime + 0.1); // 急降下してポッという音を作る
+        
+        gainNode.gain.setValueAtTime(0.3, audioCtx.currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1);
+
+        oscillator.connect(gainNode);
+        gainNode.connect(audioCtx.destination);
+        
+        oscillator.start();
+        oscillator.stop(audioCtx.currentTime + 0.15);
+    }
+
+    // --- バイブレーション ---
+    function triggerHaptic() {
+        if (navigator.vibrate) {
+            navigator.vibrate(15); // 短く鋭い振動
+        }
+    }
+
+    // --- データ管理 ---
     let habits = JSON.parse(localStorage.getItem('habits')) || [];
     let filterMode = 'all'; 
     let draftTitle = '';    
 
-    // カラーパレット
-    const colors = [
-        '#ff5252', '#ff9800', '#ffd740', '#69f0ae', 
-        '#40c4ff', '#7c4dff', '#ff4081'
-    ];
+    const colors = ['#ff5252', '#ff9800', '#ffd740', '#69f0ae', '#40c4ff', '#7c4dff', '#ff4081'];
     let selectedColor = colors[3];
 
-    // 要素取得
     const habitListEl = document.getElementById('habit-list');
     const inputEl = document.getElementById('new-habit');
     const addBtn = document.getElementById('add-btn');
@@ -393,7 +409,7 @@
 
     const getToday = () => new Date().toISOString().split('T')[0];
 
-    // --- カラーセレクター生成 ---
+    // --- カラーセレクター初期化 ---
     colors.forEach(color => {
         const dot = document.createElement('div');
         dot.className = 'color-dot';
@@ -401,6 +417,7 @@
         if (color === selectedColor) dot.classList.add('selected');
         
         dot.onclick = () => {
+            playPopSound(); // 音を鳴らす
             document.querySelectorAll('.color-dot').forEach(d => d.classList.remove('selected'));
             dot.classList.add('selected');
             selectedColor = color;
@@ -408,15 +425,14 @@
         modalColorSelector.appendChild(dot);
     });
 
-    // --- フィルタ設定 ---
     function setFilter(mode) {
+        playPopSound();
         filterMode = mode;
         document.getElementById('tab-all').classList.toggle('active', mode === 'all');
         document.getElementById('tab-unchecked').classList.toggle('active', mode === 'unchecked');
         render();
     }
 
-    // --- 描画関数 ---
     function render() {
         habitListEl.innerHTML = '';
         const today = getToday();
@@ -439,35 +455,18 @@
             const isCompleted = habit.completedDates.includes(today);
             const streak = calculateStreak(habit.completedDates);
             
-            // --- ランクとバーのスケール計算ロジック ---
             let maxDays, rankClass, rankLabel;
+            if (streak > 30) { maxDays = 365; rankClass = 'rank-gold'; rankLabel = 'Gold'; } 
+            else if (streak > 7) { maxDays = 30; rankClass = 'rank-silver'; rankLabel = 'Silver'; } 
+            else { maxDays = 7; rankClass = 'rank-bronze'; rankLabel = 'Bronze'; }
 
-            if (streak > 30) {
-                maxDays = 365;
-                rankClass = 'rank-gold';
-                rankLabel = 'Gold';
-            } else if (streak > 7) {
-                maxDays = 30;
-                rankClass = 'rank-silver';
-                rankLabel = 'Silver';
-            } else {
-                maxDays = 7;
-                rankClass = 'rank-bronze';
-                rankLabel = 'Bronze';
-            }
-
-            // バーの長さ（100%を超えないように）
             let barWidth = Math.min((streak / maxDays) * 100, 100);
 
             const div = document.createElement('div');
-            // ランククラスを追加
             div.className = `habit-card ${isCompleted ? 'completed' : ''} ${rankClass}`;
-            
-            // チェック状態のスタイル
-            const checkStyle = isCompleted 
-                ? `background-color: ${hColor}; border-color: ${hColor};` 
-                : `border-color: ${hColor};`;
+            div.id = `card-${index}`; // ID付与（アニメーション用）
 
+            const checkStyle = isCompleted ? `background-color: ${hColor}; border-color: ${hColor};` : `border-color: ${hColor};`;
             const iconStyle = `color: ${hColor};`;
 
             div.innerHTML = `
@@ -476,12 +475,12 @@
                     <div class="streak-bar-fill" style="width: ${barWidth}%;"></div>
                 </div>
                 
-                <div class="card-content" onclick="toggleHabit(${index})">
+                <div class="card-content" onclick="handleCardClick(${index})">
                     <div class="habit-info">
                         <div class="habit-icon" style="${iconStyle}">${hIcon}</div>
                         <div class="habit-text-group">
                             <span class="habit-title">${habit.title}</span>
-                            <span class="streak-info">🔥 ${streak}日 / 次の目標: ${maxDays}日</span>
+                            <span class="streak-info">🔥 ${streak}日 / ${maxDays}日</span>
                         </div>
                     </div>
                     
@@ -495,7 +494,6 @@
         });
     }
 
-    // --- ストリーク計算 ---
     function calculateStreak(dates) {
         let streak = 0;
         let d = new Date();
@@ -506,8 +504,7 @@
             while (true) {
                 d.setDate(d.getDate() - 1);
                 checkStr = d.toISOString().split('T')[0];
-                if (dates.includes(checkStr)) streak++;
-                else break;
+                if (dates.includes(checkStr)) streak++; else break;
             }
         } else {
             d.setDate(d.getDate() - 1);
@@ -517,20 +514,33 @@
                 while (true) {
                     d.setDate(d.getDate() - 1);
                     checkStr = d.toISOString().split('T')[0];
-                    if (dates.includes(checkStr)) streak++;
-                    else break;
+                    if (dates.includes(checkStr)) streak++; else break;
                 }
-            } else {
-                return 0;
-            }
+            } else { return 0; }
         }
         return streak;
     }
 
-    // --- 追加・削除・完了アクション ---
+    // --- クリック時の演出処理 ---
+    window.handleCardClick = (index) => {
+        // 音と振動
+        playPopSound();
+        triggerHaptic();
+
+        // アニメーションクラス付与
+        const card = document.getElementById(`card-${index}`);
+        card.classList.remove('bouncing');
+        void card.offsetWidth; // リフロー強制（アニメーション再点火）
+        card.classList.add('bouncing');
+
+        // データ更新
+        toggleHabit(index);
+    };
+
     addBtn.onclick = () => {
         const title = inputEl.value.trim();
         if (title) {
+            playPopSound();
             draftTitle = title;
             inputEl.value = '';
             modal.classList.add('active');
@@ -543,13 +553,9 @@
     }
 
     function confirmAdd() {
+        playPopSound();
         if (draftTitle) {
-            habits.push({ 
-                title: draftTitle, 
-                completedDates: [],
-                icon: modalIconSelect.value, 
-                color: selectedColor
-            });
+            habits.push({ title: draftTitle, completedDates: [], icon: modalIconSelect.value, color: selectedColor });
             localStorage.setItem('habits', JSON.stringify(habits));
             render();
             closeModal();
@@ -567,13 +573,17 @@
     window.toggleHabit = (index) => {
         const today = getToday();
         const dateIndex = habits[index].completedDates.indexOf(today);
-        if (dateIndex === -1) {
-            habits[index].completedDates.push(today);
-        } else {
-            habits[index].completedDates.splice(dateIndex, 1);
-        }
-        localStorage.setItem('habits', JSON.stringify(habits));
-        render();
+        
+        // 少し遅延させてレンダリング（アニメーションを見せるため）
+        setTimeout(() => {
+            if (dateIndex === -1) {
+                habits[index].completedDates.push(today);
+            } else {
+                habits[index].completedDates.splice(dateIndex, 1);
+            }
+            localStorage.setItem('habits', JSON.stringify(habits));
+            render();
+        }, 150); // 0.15秒後に描画更新
     };
 
     render();
