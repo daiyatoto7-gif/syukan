@@ -9,6 +9,7 @@
     <link rel="icon" type="image/png" href="icon.png">
 
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
 
     <style>
         :root {
@@ -59,7 +60,16 @@
             box-shadow: 0 8px 16px rgba(0,0,0,0.3);
             position: relative;
             overflow: hidden;
+            transition: all 0.5s ease; /* アニメーション用 */
+            border: 1px solid transparent;
         }
+        
+        /* 100%達成時の豪華な枠線 */
+        .progress-section.all-done {
+            box-shadow: 0 0 30px rgba(0, 230, 118, 0.4);
+            border: 1px solid rgba(255, 215, 0, 0.3);
+        }
+
         .progress-header {
             display: flex;
             justify-content: space-between;
@@ -88,21 +98,32 @@
             transition: width 0.6s cubic-bezier(0.22, 1, 0.36, 1);
             box-shadow: 0 0 10px var(--bar-color);
         }
+
+        /* --- 豪華になった完了メッセージ --- */
         .complete-msg {
             position: absolute;
             top: 50%; left: 50%;
-            transform: translate(-50%, -50%);
-            font-weight: bold;
-            color: rgba(255,255,255,0.1);
+            transform: translate(-50%, -50%) scale(0.5);
+            font-weight: 900;
+            color: transparent; /* グラデーション文字のため透明に */
             font-size: 40px;
             pointer-events: none;
-            z-index: 1;
+            z-index: 10;
             white-space: nowrap;
-            transition: color 0.5s;
+            opacity: 0;
+            transition: all 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+            
+            /* 文字を豪華にする装飾 */
+            background: linear-gradient(to bottom, #ffd700, #ff8c00);
+            -webkit-background-clip: text;
+            filter: drop-shadow(0 0 10px rgba(255, 215, 0, 0.5));
+            letter-spacing: 2px;
         }
+
         .progress-section.all-done .complete-msg {
-            color: rgba(0, 230, 118, 0.2);
-            text-shadow: 0 0 20px rgba(0, 230, 118, 0.5);
+            opacity: 1;
+            transform: translate(-50%, -50%) scale(1.2); /* 飛び出してくる感じ */
+            text-shadow: 0 0 20px rgba(255, 215, 0, 0.8), 0 0 40px rgba(255, 140, 0, 0.6);
         }
 
         /* --- 入力エリア --- */
@@ -212,7 +233,7 @@
             position: relative;
         }
 
-        /* --- グリップ（スリム化） --- */
+        /* --- グリップ --- */
         .drag-handle {
             width: 24px; 
             height: 40px;
@@ -447,8 +468,10 @@
 </div>
 
 <script>
-    // --- 音声生成 ---
+    // --- 音声生成 (AudioContext) ---
     const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    
+    // 通常のクリック音
     function playPopSound() {
         if (audioCtx.state === 'suspended') audioCtx.resume();
         const osc = audioCtx.createOscillator();
@@ -460,6 +483,8 @@
         osc.connect(gain); gain.connect(audioCtx.destination);
         osc.start(); osc.stop(audioCtx.currentTime + 0.15);
     }
+    
+    // 振動
     function triggerHaptic() {
         if (navigator.vibrate) navigator.vibrate(15);
     }
@@ -470,6 +495,9 @@
     let activeIndex = null; 
     let isEditing = false;
     let isDragging = false; 
+    
+    // 完了演出の重複防止用フラグ
+    let wasAllDone = false;
 
     const colors = ['#ff5252', '#ff9800', '#ffd740', '#69f0ae', '#40c4ff', '#7c4dff', '#ff4081'];
     let selectedColor = colors[3];
@@ -533,7 +561,7 @@
     window.openGlobalMenu = () => { globalSheet.classList.add('active'); };
     window.closeGlobalMenu = () => { globalSheet.classList.remove('active'); };
 
-    // --- SortableJS 設定 (グリップつかんだ時だけ即ドラッグ) ---
+    // --- SortableJS 設定 ---
     let sortableInstance = Sortable.create(habitListEl, {
         animation: 150,
         handle: '.drag-handle',
@@ -565,6 +593,7 @@
         modalColorSelector.appendChild(dot);
     });
 
+    // --- 進捗更新と豪華演出ロジック ---
     function updateProgress() {
         const today = getToday();
         const total = habits.length;
@@ -573,15 +602,31 @@
             progCountEl.textContent = "(0/0)";
             progBarEl.style.width = "0%";
             progSectionEl.classList.remove('all-done');
+            wasAllDone = false;
             return;
         }
         const done = habits.filter(h => h.completedDates.includes(today)).length;
         const percent = Math.round((done / total) * 100);
+        
         progPercentEl.textContent = `${percent}%`;
         progCountEl.textContent = `(${done}/${total})`;
         progBarEl.style.width = `${percent}%`;
-        if (percent === 100) progSectionEl.classList.add('all-done');
-        else progSectionEl.classList.remove('all-done');
+        
+        // 100%達成時の処理
+        if (percent === 100) {
+            progSectionEl.classList.add('all-done');
+            
+            // 「今回初めて100%になった」時だけ演出する
+            if (!wasAllDone) {
+                triggerConfetti();  // 紙吹雪
+                playVictorySound(); // ファンファーレ
+                if (navigator.vibrate) navigator.vibrate([100, 50, 100]); // 振動も豪華に
+                wasAllDone = true;
+            }
+        } else {
+            progSectionEl.classList.remove('all-done');
+            wasAllDone = false;
+        }
     }
 
     function setFilter(mode) {
@@ -798,6 +843,61 @@
             closeActionSheet();
         }
     };
+    
+    // --- 豪華演出用関数 ---
+
+    // ファンファーレを鳴らす（和音）
+    function playVictorySound() {
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        
+        const playNote = (freq, time, duration) => {
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.frequency.value = freq;
+            osc.type = 'triangle'; // 柔らかい音色
+            gain.gain.setValueAtTime(0.1, audioCtx.currentTime + time);
+            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + time + duration);
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.start(audioCtx.currentTime + time);
+            osc.stop(audioCtx.currentTime + time + duration);
+        };
+
+        // ド・ミ・ソ・ド～♪ のような構成
+        playNote(523.25, 0, 0.3);    // C5
+        playNote(659.25, 0.1, 0.3);  // E5
+        playNote(783.99, 0.2, 0.3);  // G5
+        playNote(1046.50, 0.3, 0.8); // C6 (長め)
+        playNote(523.25, 0.3, 0.8);  // 低音も重ねて厚みを出す
+    }
+
+    // 紙吹雪を飛ばす
+    function triggerConfetti() {
+        const duration = 3000;
+        const end = Date.now() + duration;
+
+        // 左右から発射
+        (function frame() {
+            confetti({
+                particleCount: 5,
+                angle: 60,
+                spread: 55,
+                origin: { x: 0 },
+                colors: ['#ffd700', '#ffffff', '#00e676'] // 金・白・緑
+            });
+            confetti({
+                particleCount: 5,
+                angle: 120,
+                spread: 55,
+                origin: { x: 1 },
+                colors: ['#ffd700', '#ffffff', '#00e676']
+            });
+
+            if (Date.now() < end) {
+                requestAnimationFrame(frame);
+            }
+        }());
+    }
 
     render();
 </script>
