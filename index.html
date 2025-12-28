@@ -463,6 +463,10 @@
             <input type="text" class="modal-input-text" id="modal-input-name" placeholder="習慣名">
         </div>
         <div class="modal-section">
+            <span class="modal-label">目標時間 (分) - 任意</span>
+            <input type="number" class="modal-input-text" id="modal-input-time" placeholder="分 (例: 30)" min="0">
+        </div>
+        <div class="modal-section">
             <span class="modal-label">アイコン</span>
             <select id="modal-icon-select">
                 <option value="💪">💪 筋トレ</option>
@@ -857,6 +861,7 @@
             const isCompleted = habit.completedDates.includes(today);
             const streak = calculateStreak(habit.completedDates);
             const totalDays = habit.completedDates.length;
+            const hTime = habit.time; // 時間設定
             
             let maxDays, rankClass, rankLabel;
             if (streak > 30) { maxDays = 365; rankClass = 'rank-gold'; rankLabel = 'Gold'; } 
@@ -871,6 +876,9 @@
 
             const checkStyle = isCompleted ? `background-color: ${hColor}; border-color: ${hColor};` : `border-color: ${hColor};`;
             const iconStyle = `color: ${hColor};`;
+            
+            // 時間バッジのHTML
+            const timeBadge = hTime ? `<span style="font-size:12px; opacity:0.8; margin-left:8px;">⏱ ${hTime}分</span>` : '';
 
             div.innerHTML = `
                 <div class="rank-badge">${rankLabel}</div>
@@ -886,6 +894,7 @@
                                 <span>🔥 連続: ${streak}日</span>
                                 <span>|</span>
                                 <span>🏆 累計: ${totalDays}日</span>
+                                ${timeBadge}
                             </div>
                         </div>
                     </div>
@@ -954,6 +963,7 @@
     const editModal = document.getElementById('edit-modal');
     const modalTitle = document.getElementById('modal-title');
     const modalInputName = document.getElementById('modal-input-name');
+    const modalInputTime = document.getElementById('modal-input-time'); // 追加
     const modalIconSelect = document.getElementById('modal-icon-select');
 
     window.openActionSheet = (e, index) => {
@@ -966,7 +976,9 @@
 
     function startAdd(initialTitle) {
         playPopSound(); isEditing = false; activeIndex = null;
-        modalTitle.textContent = "新しい習慣"; modalInputName.value = initialTitle;
+        modalTitle.textContent = "新しい習慣"; 
+        modalInputName.value = initialTitle;
+        modalInputTime.value = ''; // 時間入力リセット
         inputEl.value = ''; selectedColor = colors[3]; updateColorSelection();
         editModal.classList.add('active');
     }
@@ -974,7 +986,9 @@
     window.openEditModal = () => {
         closeActionSheet(); isEditing = true;
         const habit = habits[activeIndex];
-        modalTitle.textContent = "習慣を編集"; modalInputName.value = habit.title;
+        modalTitle.textContent = "習慣を編集"; 
+        modalInputName.value = habit.title;
+        modalInputTime.value = habit.time ? habit.time : ''; // 時間をセット
         modalIconSelect.value = habit.icon; selectedColor = habit.color;
         updateColorSelection(); editModal.classList.add('active');
     };
@@ -1000,10 +1014,15 @@
 
     window.saveHabitData = () => {
         const name = modalInputName.value.trim();
+        const timeVal = modalInputTime.value;
+        const timeData = timeVal ? parseInt(timeVal, 10) : null; // 数値化、空ならnull
+
         if (!name) { alert('習慣の名前を入力してください'); return; }
         playPopSound();
-        const newData = { title: name, icon: modalIconSelect.value, color: selectedColor };
+        const newData = { title: name, icon: modalIconSelect.value, color: selectedColor, time: timeData };
+        
         if (isEditing && activeIndex !== null) {
+            // 既存データを維持しつつ更新
             habits[activeIndex] = { ...habits[activeIndex], ...newData };
         } else {
             habits.push({ ...newData, completedDates: [] });
