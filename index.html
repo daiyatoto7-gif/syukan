@@ -34,7 +34,7 @@
             margin: 0;
             padding: 20px;
             color: var(--text-main);
-            padding-bottom: 90px; /* タブバーの分余白を確保（少し減らしました） */
+            padding-bottom: 90px; /* タブバーの分余白を確保 */
             user-select: none;
             -webkit-tap-highlight-color: transparent;
         }
@@ -66,7 +66,7 @@
             to { opacity: 1; transform: translateY(0); }
         }
 
-        /* --- タブバー（高さを低く調整） --- */
+        /* --- タブバー（コンパクト版） --- */
         .bottom-nav {
             position: fixed;
             bottom: 0; left: 0; right: 0;
@@ -75,7 +75,7 @@
             border-top: 1px solid #333;
             display: flex;
             justify-content: space-around;
-            padding: 8px 0 20px 0; /* 高さを縮小 */
+            padding: 8px 0 20px 0;
             z-index: 100;
         }
         .nav-item {
@@ -93,7 +93,7 @@
             color: var(--bar-color);
         }
         .nav-icon {
-            font-size: 20px; /* アイコンサイズも少し小さく */
+            font-size: 20px;
             margin-bottom: 2px;
         }
 
@@ -113,7 +113,6 @@
             border-left: 4px solid var(--bar-color);
             padding-left: 10px;
         }
-        /* 達成率グラフ用のヘッダー色変更 */
         .stats-header.rate-header {
             border-left-color: var(--rate-color);
         }
@@ -131,7 +130,7 @@
         /* チャートのコンテナ */
         .chart-container {
             position: relative;
-            height: 200px; /* グラフの高さを少し調整 */
+            height: 200px;
             width: 100%;
         }
 
@@ -711,7 +710,7 @@
                 scales: {
                     y: { 
                         beginAtZero: true, 
-                        max: 100, /* 100%が最大 */
+                        max: 110, /* 100%が見切れないように110に設定 */
                         ticks: { color: '#a0a0a0', stepSize: 20 }, 
                         grid: { color: '#333' } 
                     },
