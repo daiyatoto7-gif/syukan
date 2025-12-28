@@ -710,9 +710,21 @@
                 scales: {
                     y: { 
                         beginAtZero: true, 
-                        max: 110, /* 100%が見切れないように110に設定 */
-                        ticks: { color: '#a0a0a0', stepSize: 20 }, 
-                        grid: { color: '#333' } 
+                        max: 110, // 100%の上に見切れ防止の余白
+                        ticks: { 
+                            color: '#a0a0a0', 
+                            stepSize: 20,
+                            // 100を超える数値ラベルは表示しない
+                            callback: function(value) {
+                                return value > 100 ? '' : value;
+                            }
+                        }, 
+                        grid: { 
+                            // 100を超えるグリッド線は表示しない
+                            color: function(context) {
+                                return context.tick.value > 100 ? 'transparent' : '#333';
+                            }
+                        } 
                     },
                     x: { ticks: { color: '#a0a0a0' }, grid: { display: false } }
                 },
