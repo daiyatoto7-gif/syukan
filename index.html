@@ -19,6 +19,7 @@
             --text-main: #e0e0e0;
             --text-sub: #a0a0a0;
             --bar-color: #00e676; /* 蛍光グリーン */
+            --rate-color: #40c4ff; /* 達成率用ブルー */
             --modal-bg: #252525;
             
             /* ランクカラー */
@@ -33,7 +34,7 @@
             margin: 0;
             padding: 20px;
             color: var(--text-main);
-            padding-bottom: 100px; /* タブバーの分余白を確保 */
+            padding-bottom: 90px; /* タブバーの分余白を確保（少し減らしました） */
             user-select: none;
             -webkit-tap-highlight-color: transparent;
         }
@@ -65,7 +66,7 @@
             to { opacity: 1; transform: translateY(0); }
         }
 
-        /* --- タブバー --- */
+        /* --- タブバー（高さを低く調整） --- */
         .bottom-nav {
             position: fixed;
             bottom: 0; left: 0; right: 0;
@@ -74,7 +75,7 @@
             border-top: 1px solid #333;
             display: flex;
             justify-content: space-around;
-            padding: 10px 0 25px 0; /* iPhoneの下部バー考慮 */
+            padding: 8px 0 20px 0; /* 高さを縮小 */
             z-index: 100;
         }
         .nav-item {
@@ -92,8 +93,8 @@
             color: var(--bar-color);
         }
         .nav-icon {
-            font-size: 24px;
-            margin-bottom: 4px;
+            font-size: 20px; /* アイコンサイズも少し小さく */
+            margin-bottom: 2px;
         }
 
         /* --- 統計画面のスタイル --- */
@@ -112,6 +113,11 @@
             border-left: 4px solid var(--bar-color);
             padding-left: 10px;
         }
+        /* 達成率グラフ用のヘッダー色変更 */
+        .stats-header.rate-header {
+            border-left-color: var(--rate-color);
+        }
+
         .big-stats-row {
             display: flex;
             justify-content: space-around;
@@ -125,7 +131,7 @@
         /* チャートのコンテナ */
         .chart-container {
             position: relative;
-            height: 250px;
+            height: 200px; /* グラフの高さを少し調整 */
             width: 100%;
         }
 
@@ -428,6 +434,13 @@
                 <canvas id="weeklyChart"></canvas>
             </div>
         </div>
+
+        <div class="stats-card">
+            <div class="stats-header rate-header">📈 直近7日間の達成率</div>
+            <div class="chart-container">
+                <canvas id="rateChart"></canvas>
+            </div>
+        </div>
     </div>
 
 </div>
@@ -506,7 +519,8 @@
     let isEditing = false;
     let isDragging = false; 
     let wasAllDone = false;
-    let currentChart = null; // チャートインスタンス保持用
+    let currentChart = null; // 達成数チャート用
+    let currentRateChart = null; // 達成率チャート用
 
     const colors = ['#ff5252', '#ff9800', '#ffd740', '#69f0ae', '#40c4ff', '#7c4dff', '#ff4081'];
     let selectedColor = colors[3];
@@ -612,7 +626,9 @@
         // 2. グラフ用データ作成（過去7日間）
         const labels = [];
         const dataCounts = [];
+        const dataRates = []; // 達成率データ
         const today = new Date();
+        const totalHabitsCount = habits.length; // 現在の習慣総数を分母とする
 
         for (let i = 6; i >= 0; i--) {
             const d = new Date(today);
@@ -630,53 +646,78 @@
                 }
             });
             dataCounts.push(dayCount);
+
+            // 達成率計算 (総数が0の場合は0%)
+            let rate = totalHabitsCount > 0 ? Math.round((dayCount / totalHabitsCount) * 100) : 0;
+            dataRates.push(rate);
         }
 
-        // 3. チャート描画 (折れ線グラフ)
+        // 3. チャート描画 (達成数：折れ線グラフ)
         const ctx = document.getElementById('weeklyChart').getContext('2d');
-        
-        if (currentChart) {
-            currentChart.destroy();
-        }
+        if (currentChart) currentChart.destroy();
 
         currentChart = new Chart(ctx, {
-            type: 'line', // 折れ線グラフに変更
+            type: 'line',
             data: {
                 labels: labels,
                 datasets: [{
                     label: '達成数',
                     data: dataCounts,
-                    borderColor: '#00e676', // 線の色
-                    backgroundColor: 'rgba(0, 230, 118, 0.1)', // 下側の塗りつぶし色
+                    borderColor: '#00e676',
+                    backgroundColor: 'rgba(0, 230, 118, 0.1)',
                     borderWidth: 3,
                     pointBackgroundColor: '#fff',
                     pointBorderColor: '#00e676',
                     pointRadius: 4,
-                    fill: true, // 塗りつぶし有効
-                    tension: 0.4 // 曲線にする
+                    fill: true,
+                    tension: 0.4
                 }]
             },
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
                 scales: {
-                    y: {
-                        beginAtZero: true,
-                        ticks: { color: '#a0a0a0', stepSize: 1 },
-                        grid: { color: '#333' }
-                    },
-                    x: {
-                        ticks: { color: '#a0a0a0' },
-                        grid: { display: false }
-                    }
+                    y: { beginAtZero: true, ticks: { color: '#a0a0a0', stepSize: 1 }, grid: { color: '#333' } },
+                    x: { ticks: { color: '#a0a0a0' }, grid: { display: false } }
                 },
-                plugins: {
-                    legend: { display: false },
-                    tooltip: {
-                        mode: 'index',
-                        intersect: false,
-                    }
-                }
+                plugins: { legend: { display: false }, tooltip: { mode: 'index', intersect: false } }
+            }
+        });
+
+        // 4. チャート描画 (達成率：折れ線グラフ)
+        const ctxRate = document.getElementById('rateChart').getContext('2d');
+        if (currentRateChart) currentRateChart.destroy();
+
+        currentRateChart = new Chart(ctxRate, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: '達成率(%)',
+                    data: dataRates,
+                    borderColor: '#40c4ff', /* 青系 */
+                    backgroundColor: 'rgba(64, 196, 255, 0.1)',
+                    borderWidth: 3,
+                    pointBackgroundColor: '#fff',
+                    pointBorderColor: '#40c4ff',
+                    pointRadius: 4,
+                    fill: true,
+                    tension: 0.4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: { 
+                        beginAtZero: true, 
+                        max: 100, /* 100%が最大 */
+                        ticks: { color: '#a0a0a0', stepSize: 20 }, 
+                        grid: { color: '#333' } 
+                    },
+                    x: { ticks: { color: '#a0a0a0' }, grid: { display: false } }
+                },
+                plugins: { legend: { display: false }, tooltip: { mode: 'index', intersect: false } }
             }
         });
     }
