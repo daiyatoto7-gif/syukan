@@ -8,6 +8,7 @@
     <link rel="apple-touch-icon" href="icon.png">
     <link rel="icon" type="image/png" href="icon.png">
 
+    <!-- ライブラリの読み込み -->
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -237,7 +238,7 @@
         .habit-card {
             background: var(--card-bg); margin-bottom: 16px; border-radius: 12px;
             overflow: hidden; position: relative; box-shadow: 0 4px 6px rgba(0,0,0,0.2);
-            transition: transform 0.1s cubic-bezier(0.4, 0.0, 0.2, 1), box-shadow 0.2s;
+            transition: transform 0.1s cubic-bezier(0.4, 0.0, 0.2, 1), box-shadow 0.2s, opacity 0.3s;
             border: 1px solid transparent; cursor: pointer;
         }
         .sortable-ghost { opacity: 0.4; background: #333; }
@@ -373,6 +374,17 @@
         .action-btn.delete { color: #ff5252; background: rgba(255, 82, 82, 0.1); }
         .action-btn.cancel { background: transparent; color: #888; margin-bottom: 0; }
         .action-btn.backup { color: #40c4ff; background: rgba(64, 196, 255, 0.1); }
+        .action-btn.user-id { color: #ff9800; background: rgba(255, 152, 0, 0.1); }
+        
+        /* 連携ステータス表示用 */
+        .sync-status {
+            font-size: 10px; color: #666; margin-top: 5px; text-align: center;
+        }
+        
+        .user-id-display {
+            font-size: 12px; color: #888; text-align: center; margin-bottom: 15px;
+            padding: 10px; background: rgba(0,0,0,0.2); border-radius: 8px;
+        }
     </style>
 </head>
 <body>
@@ -406,9 +418,10 @@
         </div>
 
         <div id="habit-list"></div>
+        <div id="sync-status-text" class="sync-status"></div>
         
         <div style="text-align: center; margin-top: 30px;">
-            <button class="menu-btn" onclick="openGlobalMenu()">⚙️ 設定・バックアップ</button>
+            <button class="menu-btn" onclick="openGlobalMenu()">⚙️ 設定・ユーザーID</button>
         </div>
     </div>
 
@@ -504,7 +517,11 @@
 
 <div class="action-sheet-overlay" id="global-sheet" onclick="closeGlobalMenu()">
     <div class="action-sheet" onclick="event.stopPropagation()">
-        <button class="action-btn backup" onclick="exportData()">📤 バックアップ保存</button>
+        <div class="user-id-display">
+            ユーザーID: <span id="display-user-id" style="font-weight:bold; color:white;">-</span>
+        </div>
+        <button class="action-btn user-id" onclick="changeUserId()">🔄 ユーザーID変更 (引き継ぎ)</button>
+        <button class="action-btn backup" onclick="exportData()">📤 バックアップ保存 (ファイル)</button>
         <button class="action-btn backup" onclick="document.getElementById('file-input').click()">📥 データ復元 (インポート)</button>
         <input type="file" id="file-input" style="display: none;" onchange="importData(this)">
         <button class="action-btn cancel" onclick="closeGlobalMenu()">閉じる</button>
@@ -512,9 +529,33 @@
 </div>
 
 <script>
+    // ==========================================
+    // ▼ GAS連携用設定 (重要)
+    // ==========================================
+    
+    // 【重要】ここにGASで発行した「ウェブアプリURL」を貼り付けてください
+    const GAS_API_URL = "https://script.google.com/macros/s/AKfycbwu_v-ySpPNArZGo5p0EIsnADQy1UfIsw5A7SFu3bVqzOkwM43K_kLlCxpTokSqRVdbww/exec"; 
+
+    // ==========================================
+    // ▲ 設定ここまで
+    // ==========================================
+
     // --- 初期化 ---
     const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
     
+    // ユーザーID管理
+    function generateUserId() {
+        // 簡易的なランダムID生成
+        return 'user_' + Math.random().toString(36).substring(2, 9);
+    }
+    
+    let userId = localStorage.getItem('habit_user_id');
+    if (!userId) {
+        userId = generateUserId();
+        localStorage.setItem('habit_user_id', userId);
+    }
+    document.getElementById('display-user-id').textContent = userId;
+
     // データ変数
     let habits = JSON.parse(localStorage.getItem('habits')) || [];
     let filterMode = 'all'; 
@@ -522,8 +563,8 @@
     let isEditing = false;
     let isDragging = false; 
     let wasAllDone = false;
-    let currentChart = null; // 達成数チャート用
-    let currentRateChart = null; // 達成率チャート用
+    let currentChart = null; 
+    let currentRateChart = null; 
 
     const colors = ['#ff5252', '#ff9800', '#ffd740', '#69f0ae', '#40c4ff', '#7c4dff', '#ff4081'];
     let selectedColor = colors[3];
@@ -536,6 +577,7 @@
     const progCountEl = document.getElementById('prog-count');
     const progBarEl = document.getElementById('prog-bar');
     const progSectionEl = document.getElementById('progress-section');
+    const syncStatusEl = document.getElementById('sync-status-text');
     
     // タブ要素
     const viewMain = document.getElementById('view-main');
@@ -543,7 +585,102 @@
     const navHome = document.getElementById('nav-home');
     const navStats = document.getElementById('nav-stats');
 
-    // ローカル時間を考慮した今日の日付取得 (ISO形式 YYYY-MM-DD)
+    // --- GAS連携ロジック (マルチユーザー対応) ---
+
+    // 1. クラウドからデータを読み込む
+    async function loadFromCloud() {
+        if (!GAS_API_URL || GAS_API_URL.includes("ここに")) {
+            console.warn("GAS URLが設定されていません。ローカルモードで動作します。");
+            return;
+        }
+        
+        habitListEl.style.opacity = "0.5"; 
+        syncStatusEl.textContent = "同期中...";
+
+        try {
+            // GETリクエストにuserIdを含める
+            const response = await fetch(`${GAS_API_URL}?userId=${userId}`);
+            const cloudData = await response.json();
+            
+            const isCloudEmpty = !Array.isArray(cloudData) || cloudData.length === 0;
+            const hasLocalData = Array.isArray(habits) && habits.length > 0;
+
+            if (isCloudEmpty && hasLocalData) {
+                // 初回：クラウド空＆ローカルありならアップロード（引き継ぎ）
+                console.log("【新規ID】ローカルデータをクラウドへ保存します...");
+                saveToCloud(true); 
+            } 
+            else if (Array.isArray(cloudData) && cloudData.length > 0) {
+                // クラウドにデータがあればそれを正として上書き
+                habits = cloudData;
+                localStorage.setItem('habits', JSON.stringify(habits));
+                render();
+                console.log("クラウドからデータを復元しました");
+            }
+            syncStatusEl.textContent = "クラウドと同期しました";
+            setTimeout(() => { syncStatusEl.textContent = ""; }, 3000);
+
+        } catch (e) {
+            console.error("読み込みエラー:", e);
+            syncStatusEl.textContent = "同期エラー (オフラインの可能性があります)";
+        } finally {
+            habitListEl.style.opacity = "1";
+        }
+    }
+
+    // 2. クラウドへデータを保存する
+    let saveTimeout;
+    function saveToCloud(immediate = false) {
+        if (!GAS_API_URL || GAS_API_URL.includes("ここに")) return;
+
+        const performSave = async () => {
+            syncStatusEl.textContent = "保存中...";
+            try {
+                // userIdを含めてPOST送信
+                const payload = {
+                    userId: userId,
+                    habits: habits
+                };
+                
+                await fetch(GAS_API_URL, {
+                    method: "POST",
+                    body: JSON.stringify(payload),
+                    headers: { "Content-Type": "text/plain" } 
+                });
+                console.log("クラウドに保存完了");
+                syncStatusEl.textContent = "保存完了";
+                setTimeout(() => { syncStatusEl.textContent = ""; }, 2000);
+            } catch (e) {
+                console.error("保存エラー:", e);
+                syncStatusEl.textContent = "保存失敗";
+            }
+        };
+
+        clearTimeout(saveTimeout);
+        if (immediate) {
+            performSave();
+        } else {
+            saveTimeout = setTimeout(performSave, 1000);
+        }
+    }
+
+    // --- ユーザーID変更機能 ---
+    window.changeUserId = () => {
+        const currentId = localStorage.getItem('habit_user_id');
+        const newId = prompt("新しいユーザーIDを入力してください\n(既に使っているIDを入力するとデータを引き継げます)", currentId);
+        
+        if (newId && newId.trim() !== "" && newId !== currentId) {
+            if(confirm("ユーザーIDを変更します。よろしいですか？\n(アプリがリロードされます)")) {
+                localStorage.setItem('habit_user_id', newId.trim());
+                // ID変更時は念の為ローカルデータをクリアせず、クラウドから読み直す形にする
+                // ただし、整合性を保つためリロードさせる
+                location.reload();
+            }
+        }
+    };
+
+    // --- 以下、既存ロジック ---
+
     const getToday = () => {
         const d = new Date();
         const offset = d.getTimezoneOffset() * 60000;
@@ -594,7 +731,6 @@
         }());
     }
 
-    // --- タブ切り替え制御 ---
     window.switchTab = (tabName) => {
         playPopSound();
         if (tabName === 'main') {
@@ -607,13 +743,11 @@
             viewStats.classList.add('active');
             navHome.classList.remove('active');
             navStats.classList.add('active');
-            updateStatsView(); // 統計画面更新
+            updateStatsView(); 
         }
     };
 
-    // --- 統計画面の更新 ---
     function updateStatsView() {
-        // 1. 総合データ計算
         let totalCompleted = 0;
         let maxStreakAll = 0;
 
@@ -626,22 +760,19 @@
         document.getElementById('stat-total-completed').textContent = totalCompleted;
         document.getElementById('stat-best-streak').textContent = maxStreakAll + "日";
 
-        // 2. グラフ用データ作成（過去7日間）
         const labels = [];
         const dataCounts = [];
-        const dataRates = []; // 達成率データ
+        const dataRates = [];
         const today = new Date();
-        const totalHabitsCount = habits.length; // 現在の習慣総数を分母とする
+        const totalHabitsCount = habits.length;
 
         for (let i = 6; i >= 0; i--) {
             const d = new Date(today);
             d.setDate(today.getDate() - i);
             const dateStr = d.toISOString().split('T')[0];
             
-            // ラベル (例: 12/28)
             labels.push(`${d.getMonth()+1}/${d.getDate()}`);
 
-            // その日の達成数合計
             let dayCount = 0;
             habits.forEach(h => {
                 if (h.completedDates.some(cd => cd.endsWith(dateStr) || cd === dateStr)) {
@@ -649,13 +780,10 @@
                 }
             });
             dataCounts.push(dayCount);
-
-            // 達成率計算 (総数が0の場合は0%)
             let rate = totalHabitsCount > 0 ? Math.round((dayCount / totalHabitsCount) * 100) : 0;
             dataRates.push(rate);
         }
 
-        // 3. チャート描画 (達成数：折れ線グラフ)
         const ctx = document.getElementById('weeklyChart').getContext('2d');
         if (currentChart) currentChart.destroy();
 
@@ -687,7 +815,6 @@
             }
         });
 
-        // 4. チャート描画 (達成率：折れ線グラフ)
         const ctxRate = document.getElementById('rateChart').getContext('2d');
         if (currentRateChart) currentRateChart.destroy();
 
@@ -698,7 +825,7 @@
                 datasets: [{
                     label: '達成率(%)',
                     data: dataRates,
-                    borderColor: '#40c4ff', /* 青系 */
+                    borderColor: '#40c4ff',
                     backgroundColor: 'rgba(64, 196, 255, 0.1)',
                     borderWidth: 3,
                     pointBackgroundColor: '#fff',
@@ -714,20 +841,14 @@
                 scales: {
                     y: { 
                         beginAtZero: true, 
-                        max: 110, // 100%の上に見切れ防止の余白
+                        max: 110,
                         ticks: { 
                             color: '#a0a0a0', 
                             stepSize: 20,
-                            // 100を超える数値ラベルは表示しない
-                            callback: function(value) {
-                                return value > 100 ? '' : value;
-                            }
+                            callback: function(value) { return value > 100 ? '' : value; }
                         }, 
                         grid: { 
-                            // 100を超えるグリッド線は表示しない
-                            color: function(context) {
-                                return context.tick.value > 100 ? 'transparent' : '#333';
-                            }
+                            color: function(context) { return context.tick.value > 100 ? 'transparent' : '#333'; }
                         } 
                     },
                     x: { ticks: { color: '#a0a0a0' }, grid: { display: false } }
@@ -759,6 +880,7 @@
                 if (Array.isArray(loaded)) {
                     habits = loaded;
                     localStorage.setItem('habits', JSON.stringify(habits));
+                    saveToCloud(true); 
                     render();
                     alert('データを復元しました！');
                 }
@@ -769,7 +891,6 @@
         input.value = '';
     }
 
-    // --- グローバルメニュー制御 ---
     const globalSheet = document.getElementById('global-sheet');
     window.openGlobalMenu = () => { globalSheet.classList.add('active'); };
     window.closeGlobalMenu = () => { globalSheet.classList.remove('active'); };
@@ -783,6 +904,7 @@
             const item = habits.splice(evt.oldIndex, 1)[0];
             habits.splice(evt.newIndex, 0, item);
             localStorage.setItem('habits', JSON.stringify(habits));
+            saveToCloud(); 
         }
     });
 
@@ -861,7 +983,7 @@
             const isCompleted = habit.completedDates.includes(today);
             const streak = calculateStreak(habit.completedDates);
             const totalDays = habit.completedDates.length;
-            const hTime = habit.time; // 時間設定
+            const hTime = habit.time; 
             
             let maxDays, rankClass, rankLabel;
             if (streak > 30) { maxDays = 365; rankClass = 'rank-gold'; rankLabel = 'Gold'; } 
@@ -876,8 +998,6 @@
 
             const checkStyle = isCompleted ? `background-color: ${hColor}; border-color: ${hColor};` : `border-color: ${hColor};`;
             const iconStyle = `color: ${hColor};`;
-            
-            // 時間バッジのHTML
             const timeBadge = hTime ? `<span style="font-size:12px; opacity:0.8; margin-left:8px;">⏱ ${hTime}分</span>` : '';
 
             div.innerHTML = `
@@ -908,7 +1028,6 @@
     function calculateStreak(dates) {
         let streak = 0;
         let d = new Date();
-        // ストリーク計算は今日のローカル日付基準
         let checkStr = getToday();
         
         if (dates.includes(checkStr)) {
@@ -954,16 +1073,16 @@
             if (dateIndex === -1) habits[index].completedDates.push(today);
             else habits[index].completedDates.splice(dateIndex, 1);
             localStorage.setItem('habits', JSON.stringify(habits));
+            saveToCloud(); 
             render();
         }, 150);
     };
 
-    // --- 各種UI制御 ---
     const actionSheet = document.getElementById('action-sheet');
     const editModal = document.getElementById('edit-modal');
     const modalTitle = document.getElementById('modal-title');
     const modalInputName = document.getElementById('modal-input-name');
-    const modalInputTime = document.getElementById('modal-input-time'); // 追加
+    const modalInputTime = document.getElementById('modal-input-time'); 
     const modalIconSelect = document.getElementById('modal-icon-select');
 
     window.openActionSheet = (e, index) => {
@@ -978,7 +1097,7 @@
         playPopSound(); isEditing = false; activeIndex = null;
         modalTitle.textContent = "新しい習慣"; 
         modalInputName.value = initialTitle;
-        modalInputTime.value = ''; // 時間入力リセット
+        modalInputTime.value = '';
         inputEl.value = ''; selectedColor = colors[3]; updateColorSelection();
         editModal.classList.add('active');
     }
@@ -988,7 +1107,7 @@
         const habit = habits[activeIndex];
         modalTitle.textContent = "習慣を編集"; 
         modalInputName.value = habit.title;
-        modalInputTime.value = habit.time ? habit.time : ''; // 時間をセット
+        modalInputTime.value = habit.time ? habit.time : '';
         modalIconSelect.value = habit.icon; selectedColor = habit.color;
         updateColorSelection(); editModal.classList.add('active');
     };
@@ -1015,19 +1134,19 @@
     window.saveHabitData = () => {
         const name = modalInputName.value.trim();
         const timeVal = modalInputTime.value;
-        const timeData = timeVal ? parseInt(timeVal, 10) : null; // 数値化、空ならnull
+        const timeData = timeVal ? parseInt(timeVal, 10) : null;
 
         if (!name) { alert('習慣の名前を入力してください'); return; }
         playPopSound();
         const newData = { title: name, icon: modalIconSelect.value, color: selectedColor, time: timeData };
         
         if (isEditing && activeIndex !== null) {
-            // 既存データを維持しつつ更新
             habits[activeIndex] = { ...habits[activeIndex], ...newData };
         } else {
             habits.push({ ...newData, completedDates: [] });
         }
         localStorage.setItem('habits', JSON.stringify(habits));
+        saveToCloud(); 
         render(); closeEditModal();
     };
 
@@ -1035,11 +1154,14 @@
         if(confirm('本当に削除しますか？')) {
             habits.splice(activeIndex, 1);
             localStorage.setItem('habits', JSON.stringify(habits));
+            saveToCloud(); 
             render(); closeActionSheet();
         }
     };
 
     render();
+    loadFromCloud(); 
+
 </script>
 
 </body>
