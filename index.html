@@ -360,12 +360,40 @@
             font-size: 12px; color: #888; text-align: center; margin-bottom: 15px;
             padding: 10px; background: rgba(0,0,0,0.2); border-radius: 8px;
         }
+
+        /* 他ユーザー閲覧バナー */
+        #viewing-banner {
+            display: none;
+            background: linear-gradient(135deg, #1a237e, #283593);
+            border: 1px solid #3949ab;
+            border-radius: 12px;
+            padding: 12px 16px;
+            margin-bottom: 16px;
+            text-align: center;
+        }
+        #viewing-banner.active { display: block; }
+        #viewing-banner .banner-label {
+            font-size: 11px; color: #9fa8da; letter-spacing: 1px; margin-bottom: 4px;
+        }
+        #viewing-banner .banner-id {
+            font-size: 13px; color: #e8eaf6; font-weight: bold; word-break: break-all;
+        }
+        #viewing-banner .banner-return {
+            margin-top: 10px; padding: 6px 16px;
+            background: #3949ab; color: #fff; border: none;
+            border-radius: 20px; font-size: 12px; cursor: pointer;
+        }
     </style>
 </head>
 <body>
 <div class="container">
     <h1>HABIT TRACKER</h1>
     <div id="view-main" class="view-section active">
+        <div id="viewing-banner">
+            <div class="banner-label">👁 閲覧モード（読み取り専用）</div>
+            <div class="banner-id" id="viewing-banner-id"></div>
+            <button class="banner-return" onclick="returnToMyData()">← 自分のデータに戻る</button>
+        </div>
         <div class="progress-section" id="progress-section">
             <div class="complete-msg">COMPLETE!</div>
             <div class="progress-header">
@@ -484,6 +512,7 @@
             ユーザーID: <span id="display-user-id" style="font-weight:bold; color:white;">-</span>
         </div>
         <button class="action-btn user-id" onclick="changeUserId()">🔄 ユーザーID変更 (引き継ぎ)</button>
+        <button class="action-btn" style="background:#1a237e; color:#e8eaf6;" onclick="viewOtherUser()">👁 他のユーザーを見る</button>
         <button class="action-btn backup" onclick="exportData()">📤 バックアップ保存 (ファイル)</button>
         <button class="action-btn backup" onclick="document.getElementById('file-input').click()">📥 データ復元 (インポート)</button>
         <input type="file" id="file-input" style="display: none;" onchange="importData(this)">
@@ -518,6 +547,8 @@
  
     // データ変数
     let habits = JSON.parse(localStorage.getItem('habits')) || [];
+    let myHabits = null; // 他ユーザー閲覧中に自分のデータを退避
+    let isViewingOther = false;
     let filterMode = 'all';
     let activeIndex = null;
     let isEditing = false;
@@ -612,6 +643,50 @@
         }
     }
  
+    // --- 他ユーザー閲覧機能 ---
+    window.viewOtherUser = async () => {
+        closeGlobalMenu();
+        const targetId = prompt("閲覧したいユーザーIDを入力してください");
+        if (!targetId || !targetId.trim()) return;
+        const tid = targetId.trim();
+        if (tid === userId) { alert("それはあなた自身のIDです"); return; }
+
+        syncStatusEl.textContent = "読み込み中...";
+        try {
+            const response = await fetch(`${GAS_API_URL}?userId=${tid}`);
+            const data = await response.json();
+            if (!Array.isArray(data) || data.length === 0) {
+                syncStatusEl.textContent = "";
+                alert(`ユーザー「${tid}」のデータが見つかりませんでした`);
+                return;
+            }
+            myHabits = habits;
+            habits = data;
+            isViewingOther = true;
+            document.getElementById('viewing-banner-id').textContent = tid;
+            document.getElementById('viewing-banner').classList.add('active');
+            document.getElementById('new-habit').disabled = true;
+            document.getElementById('add-btn').disabled = true;
+            sortableInstance.option("disabled", true);
+            syncStatusEl.textContent = "";
+            render();
+        } catch (e) {
+            syncStatusEl.textContent = "";
+            alert("データの取得に失敗しました");
+        }
+    };
+
+    window.returnToMyData = () => {
+        habits = myHabits;
+        myHabits = null;
+        isViewingOther = false;
+        document.getElementById('viewing-banner').classList.remove('active');
+        document.getElementById('new-habit').disabled = false;
+        document.getElementById('add-btn').disabled = false;
+        sortableInstance.option("disabled", filterMode !== 'all');
+        render();
+    };
+
     // --- ユーザーID変更機能 ---
     window.changeUserId = () => {
         const currentId = localStorage.getItem('habit_user_id');
@@ -1004,7 +1079,7 @@
     }
  
     window.handleCardClick = (index) => {
-        if (isDragging) return;
+        if (isDragging || isViewingOther) return;
         playPopSound();
         triggerHaptic();
         const card = document.getElementById(`card-${index}`);
@@ -1034,7 +1109,7 @@
     const modalIconSelect = document.getElementById('modal-icon-select');
  
     window.openActionSheet = (e, index) => {
-        e.stopPropagation(); if (isDragging) return;
+        e.stopPropagation(); if (isDragging || isViewingOther) return;
         activeIndex = index; actionSheet.classList.add('active');
     };
     window.closeActionSheet = () => { actionSheet.classList.remove('active'); };
