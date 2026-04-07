@@ -361,6 +361,33 @@
             padding: 10px; background: rgba(0,0,0,0.2); border-radius: 8px;
         }
 
+        /* 他ユーザー選択モーダル */
+        #view-user-modal .modal-content { max-height: 80vh; overflow-y: auto; }
+        .view-user-history-list { margin: 8px 0 16px; display: flex; flex-direction: column; gap: 8px; }
+        .view-user-history-item {
+            display: flex; align-items: center; gap: 8px;
+            background: rgba(255,255,255,0.05); border-radius: 10px; padding: 10px 12px;
+        }
+        .view-user-history-item button.select-btn {
+            flex: 1; text-align: left; background: none; border: none;
+            color: var(--text-main); font-size: 13px; cursor: pointer; padding: 0;
+            word-break: break-all;
+        }
+        .view-user-history-item button.del-btn {
+            background: none; border: none; color: #555; font-size: 16px; cursor: pointer; flex-shrink: 0;
+        }
+        .view-user-new-input {
+            display: flex; gap: 8px; margin-top: 4px;
+        }
+        .view-user-new-input input {
+            flex: 1; background: rgba(255,255,255,0.07); border: 1px solid #444;
+            border-radius: 8px; padding: 10px 12px; color: var(--text-main); font-size: 13px;
+        }
+        .view-user-new-input button {
+            background: #3949ab; color: #fff; border: none;
+            border-radius: 8px; padding: 10px 14px; font-size: 13px; cursor: pointer;
+        }
+
         /* 他ユーザー閲覧バナー */
         #viewing-banner {
             display: none;
@@ -496,6 +523,25 @@
         <div class="modal-actions">
             <button class="modal-btn btn-cancel" onclick="closeEditModal()">キャンセル</button>
             <button class="modal-btn btn-confirm" onclick="saveHabitData()">保存</button>
+        </div>
+    </div>
+</div>
+<div class="modal-overlay" id="view-user-modal">
+    <div class="modal-content" onclick="event.stopPropagation()">
+        <div class="modal-title">👁 ユーザーを選択</div>
+        <div class="modal-section" id="view-user-history-section" style="display:none;">
+            <span class="modal-label">最近見たユーザー</span>
+            <div class="view-user-history-list" id="view-user-history-list"></div>
+        </div>
+        <div class="modal-section">
+            <span class="modal-label">IDを入力して見る</span>
+            <div class="view-user-new-input">
+                <input type="text" id="view-user-input" placeholder="ユーザーID">
+                <button onclick="loadViewUserFromInput()">表示</button>
+            </div>
+        </div>
+        <div class="modal-actions">
+            <button class="modal-btn btn-cancel" onclick="closeViewUserModal()">キャンセル</button>
         </div>
     </div>
 </div>
@@ -644,11 +690,66 @@
     }
  
     // --- 他ユーザー閲覧機能 ---
-    window.viewOtherUser = async () => {
+    const VIEW_USER_HISTORY_KEY = 'view_user_history';
+
+    function getViewUserHistory() {
+        return JSON.parse(localStorage.getItem(VIEW_USER_HISTORY_KEY)) || [];
+    }
+
+    function addViewUserHistory(tid) {
+        let history = getViewUserHistory();
+        history = history.filter(id => id !== tid); // 重複除去
+        history.unshift(tid);
+        history = history.slice(0, 10); // 最大10件
+        localStorage.setItem(VIEW_USER_HISTORY_KEY, JSON.stringify(history));
+    }
+
+    function removeViewUserHistory(tid) {
+        let history = getViewUserHistory().filter(id => id !== tid);
+        localStorage.setItem(VIEW_USER_HISTORY_KEY, JSON.stringify(history));
+        renderViewUserModal();
+    }
+
+    function renderViewUserModal() {
+        const history = getViewUserHistory();
+        const section = document.getElementById('view-user-history-section');
+        const list = document.getElementById('view-user-history-list');
+        if (history.length === 0) {
+            section.style.display = 'none';
+            return;
+        }
+        section.style.display = 'block';
+        list.innerHTML = '';
+        history.forEach(tid => {
+            const item = document.createElement('div');
+            item.className = 'view-user-history-item';
+            item.innerHTML = `
+                <button class="select-btn" onclick="loadViewUser('${tid}')">👤 ${tid}</button>
+                <button class="del-btn" onclick="removeViewUserHistory('${tid}')" title="履歴から削除">✕</button>
+            `;
+            list.appendChild(item);
+        });
+    }
+
+    window.viewOtherUser = () => {
         closeGlobalMenu();
-        const targetId = prompt("閲覧したいユーザーIDを入力してください");
-        if (!targetId || !targetId.trim()) return;
-        const tid = targetId.trim();
+        document.getElementById('view-user-input').value = '';
+        renderViewUserModal();
+        document.getElementById('view-user-modal').classList.add('active');
+    };
+
+    window.closeViewUserModal = () => {
+        document.getElementById('view-user-modal').classList.remove('active');
+    };
+
+    window.loadViewUserFromInput = () => {
+        const tid = document.getElementById('view-user-input').value.trim();
+        if (!tid) return;
+        loadViewUser(tid);
+    };
+
+    window.loadViewUser = async (tid) => {
+        closeViewUserModal();
         if (tid === userId) { alert("それはあなた自身のIDです"); return; }
 
         syncStatusEl.textContent = "読み込み中...";
@@ -660,6 +761,7 @@
                 alert(`ユーザー「${tid}」のデータが見つかりませんでした`);
                 return;
             }
+            addViewUserHistory(tid);
             myHabits = habits;
             habits = data;
             isViewingOther = true;
