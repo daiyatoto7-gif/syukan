@@ -624,6 +624,7 @@
     // --- GAS連携ロジック (マルチユーザー対応) ---
     // 1. クラウドからデータを読み込む
     async function loadFromCloud() {
+        if (isViewingOther) return;
         if (!GAS_API_URL || GAS_API_URL.includes("ここに")) {
             console.warn("GAS URLが設定されていません。ローカルモードで動作します。");
             return;
@@ -762,6 +763,7 @@
                 return;
             }
             addViewUserHistory(tid);
+            clearTimeout(saveTimeout);
             myHabits = habits;
             habits = data;
             isViewingOther = true;
@@ -796,6 +798,7 @@
         if (newId && newId.trim() !== "" && newId !== currentId) {
             if(confirm("ユーザーIDを変更します。よろしいですか？\n(アプリがリロードされます)")) {
                 localStorage.setItem('habit_user_id', newId.trim());
+                localStorage.removeItem('habits');
                 location.reload();
             }
         }
