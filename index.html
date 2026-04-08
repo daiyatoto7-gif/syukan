@@ -785,8 +785,7 @@
         document.getElementById('viewing-banner').classList.remove('active');
         document.getElementById('new-habit').disabled = false;
         document.getElementById('add-btn').disabled = false;
-        sortableInstance.option("disabled", filterMode !== 'all');
-        render();
+        setFilter(filterMode);
     };
 
     // --- ユーザーID変更機能 ---
@@ -1082,7 +1081,7 @@
         filterMode = mode;
         document.getElementById('tab-all').classList.toggle('active', mode === 'all');
         document.getElementById('tab-unchecked').classList.toggle('active', mode === 'unchecked');
-        sortableInstance.option("disabled", mode !== 'all');
+        sortableInstance.option("disabled", mode !== 'all' || isViewingOther);
         render();
     }
  
