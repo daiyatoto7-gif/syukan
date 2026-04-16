@@ -25,6 +25,7 @@
             --bronze: #cd7f32;
             --silver: #e0e0e0;
             --gold: #ffd700;
+            --platinum: #00bcd4;
         }
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
@@ -236,9 +237,10 @@
             50% { transform: scale(1.02); } 100% { transform: scale(1); }
         }
  
-        .habit-card.rank-bronze { border-color: rgba(205, 127, 50, 0.5); }
-        .habit-card.rank-silver { border-color: rgba(224, 224, 224, 0.5); }
-        .habit-card.rank-gold   { border-color: rgba(255, 215, 0, 0.5); box-shadow: 0 0 15px rgba(255, 215, 0, 0.15); }
+        .habit-card.rank-bronze   { border-color: rgba(205, 127, 50, 0.5); }
+        .habit-card.rank-silver   { border-color: rgba(224, 224, 224, 0.5); }
+        .habit-card.rank-gold     { border-color: rgba(255, 215, 0, 0.5); box-shadow: 0 0 15px rgba(255, 215, 0, 0.15); }
+        .habit-card.rank-platinum { border-color: rgba(0, 188, 212, 0.6); box-shadow: 0 0 20px rgba(0, 188, 212, 0.2); }
         .card-content {
             padding: 15px 20px; display: flex; align-items: center; justify-content: space-between;
             z-index: 2; position: relative;
@@ -254,9 +256,11 @@
             font-size: 10px; font-weight: bold; border-bottom-left-radius: 8px;
             color: #121212; z-index: 3;
         }
-        .rank-bronze .rank-badge { background-color: var(--bronze); }
-        .rank-silver .rank-badge { background-color: var(--silver); }
-        .rank-gold .rank-badge   { background-color: var(--gold); }
+        .rank-bronze .rank-badge   { background-color: var(--bronze); }
+        .rank-silver .rank-badge   { background-color: var(--silver); }
+        .rank-gold .rank-badge     { background-color: var(--gold); }
+        .rank-platinum .rank-badge { background: linear-gradient(135deg, #e0f7fa, #b2ebf2, #e0f7fa); color: #006064; }
+        .rank-platinum .streak-bar-fill { background-color: var(--platinum); box-shadow: 0 0 10px var(--platinum); }
         .habit-info { display: flex; align-items: center; gap: 15px; flex: 1; }
         .habit-icon {
             font-size: 24px; width: 40px; height: 40px;
@@ -388,6 +392,122 @@
             border-radius: 8px; padding: 10px 14px; font-size: 13px; cursor: pointer;
         }
 
+        /* 習慣別パフォーマンスカード */
+        .habit-perf-card {
+            background: rgba(255,255,255,0.04);
+            border-radius: 12px;
+            padding: 14px;
+            margin-bottom: 12px;
+            border: 1px solid rgba(255,255,255,0.07);
+        }
+        .habit-perf-card:last-child { margin-bottom: 0; }
+        .habit-perf-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 10px;
+        }
+        .habit-perf-icon {
+            font-size: 18px;
+            width: 32px;
+            height: 32px;
+            background: rgba(255,255,255,0.05);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+        .habit-perf-title {
+            font-size: 14px;
+            font-weight: 600;
+            flex: 1;
+            color: var(--text-main);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .rank-badge-inline {
+            padding: 2px 8px;
+            font-size: 10px;
+            font-weight: bold;
+            border-radius: 10px;
+            color: #121212;
+            flex-shrink: 0;
+        }
+        .rank-badge-inline.rank-bronze   { background-color: var(--bronze); }
+        .rank-badge-inline.rank-silver   { background-color: var(--silver); }
+        .rank-badge-inline.rank-gold     { background-color: var(--gold); }
+        .rank-badge-inline.rank-platinum { background: linear-gradient(135deg, #e0f7fa, #b2ebf2, #e0f7fa); color: #006064; }
+        .habit-perf-stats {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            font-size: 11px;
+            color: var(--text-sub);
+            margin-bottom: 10px;
+        }
+        .habit-perf-stats span {
+            background: rgba(255,255,255,0.05);
+            padding: 3px 7px;
+            border-radius: 6px;
+        }
+        .perf-progress-bar-bg {
+            height: 5px;
+            background: rgba(255,255,255,0.08);
+            border-radius: 3px;
+            overflow: hidden;
+            margin-bottom: 4px;
+        }
+        .perf-progress-bar-fill {
+            height: 100%;
+            border-radius: 3px;
+            background: var(--bar-color);
+            transition: width 0.5s ease;
+        }
+        .perf-next-rank-label {
+            font-size: 10px;
+            color: var(--text-sub);
+            text-align: right;
+        }
+        /* ヒートマップ */
+        .heatmap-dow-labels {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 3px;
+            margin-bottom: 4px;
+        }
+        .heatmap-dow-label {
+            text-align: center;
+            font-size: 10px;
+            color: var(--text-sub);
+        }
+        .heatmap-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 3px;
+        }
+        .heatmap-cell {
+            aspect-ratio: 1 / 1;
+            border-radius: 3px;
+            background: rgba(255,255,255,0.05);
+        }
+        .heatmap-cell.empty { background: transparent; }
+        .heatmap-legend {
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 4px;
+            margin-top: 8px;
+            font-size: 10px;
+            color: var(--text-sub);
+        }
+        .heatmap-legend-cell {
+            width: 12px;
+            height: 12px;
+            border-radius: 2px;
+        }
+
         /* 他ユーザー閲覧バナー */
         #viewing-banner {
             display: none;
@@ -474,6 +594,38 @@
             <div class="stats-header rate-header">📈 直近7日間の達成率</div>
             <div class="chart-container">
                 <canvas id="rateChart"></canvas>
+            </div>
+        </div>
+        <div class="stats-card">
+            <div class="stats-header">🏅 習慣別パフォーマンス</div>
+            <div id="habit-perf-list"></div>
+        </div>
+        <div class="stats-card">
+            <div class="stats-header">📆 曜日別達成率（全習慣合計）</div>
+            <div class="chart-container">
+                <canvas id="dowChart"></canvas>
+            </div>
+        </div>
+        <div class="stats-card">
+            <div class="stats-header">🗓 直近30日カレンダー</div>
+            <div class="heatmap-dow-labels">
+                <div class="heatmap-dow-label">月</div>
+                <div class="heatmap-dow-label">火</div>
+                <div class="heatmap-dow-label">水</div>
+                <div class="heatmap-dow-label">木</div>
+                <div class="heatmap-dow-label">金</div>
+                <div class="heatmap-dow-label">土</div>
+                <div class="heatmap-dow-label">日</div>
+            </div>
+            <div class="heatmap-grid" id="heatmap-grid"></div>
+            <div class="heatmap-legend">
+                <span>少ない</span>
+                <div class="heatmap-legend-cell" style="background:rgba(0,230,118,0.1)"></div>
+                <div class="heatmap-legend-cell" style="background:rgba(0,230,118,0.35)"></div>
+                <div class="heatmap-legend-cell" style="background:rgba(0,230,118,0.6)"></div>
+                <div class="heatmap-legend-cell" style="background:rgba(0,230,118,0.85)"></div>
+                <div class="heatmap-legend-cell" style="background:#00e676;box-shadow:0 0 4px rgba(0,230,118,0.6)"></div>
+                <span>全完了</span>
             </div>
         </div>
     </div>
@@ -602,6 +754,7 @@
     let wasAllDone = false;
     let currentChart = null;
     let currentRateChart = null;
+    let currentDowChart = null;
     const colors = ['#ff5252', '#ff9800', '#ffd740', '#69f0ae', '#40c4ff', '#7c4dff', '#ff4081'];
     let selectedColor = colors[3];
  
@@ -983,6 +1136,186 @@
                 plugins: { legend: { display: false }, tooltip: { mode: 'index', intersect: false } }
             }
         });
+
+        renderHabitPerfCards();
+        renderWeekdayChart();
+        renderHeatmap();
+    }
+
+    // --- 習慣別パフォーマンスカード ---
+    function renderHabitPerfCards() {
+        const container = document.getElementById('habit-perf-list');
+        if (!container) return;
+        container.innerHTML = '';
+
+        if (habits.length === 0) {
+            container.innerHTML = '<p style="text-align:center;color:#555;font-size:13px;">習慣がまだありません</p>';
+            return;
+        }
+
+        const todayAdjusted = new Date(new Date().getTime() - 4 * 60 * 60 * 1000);
+
+        habits.forEach(h => {
+            const streak = calculateStreak(h.completedDates);
+            const bestStreak = calculateBestStreak(h.completedDates);
+            const totalDays = h.completedDates.length;
+            const { rankClass, rankLabel, maxDays, nextRankDays } = getRankInfo(streak);
+
+            // 直近30日達成率
+            let recent30 = 0;
+            for (let i = 0; i < 30; i++) {
+                const d = new Date(todayAdjusted);
+                d.setDate(todayAdjusted.getDate() - i);
+                const offset = d.getTimezoneOffset() * 60000;
+                const ds = new Date(d.getTime() - offset).toISOString().split('T')[0];
+                if (h.completedDates.includes(ds)) recent30++;
+            }
+            const rate30 = Math.round((recent30 / 30) * 100);
+
+            // 次ランクまでの進捗
+            const barPct = nextRankDays ? Math.min((streak / nextRankDays) * 100, 100) : 100;
+            const nextLabel = nextRankDays
+                ? `次のランクまで あと ${nextRankDays - streak}日`
+                : 'MAX RANK';
+
+            const isPlatinum = rankClass === 'rank-platinum';
+            const barColor = isPlatinum ? 'var(--platinum)' : 'var(--bar-color)';
+
+            const card = document.createElement('div');
+            card.className = 'habit-perf-card';
+            card.innerHTML = `
+                <div class="habit-perf-header">
+                    <div class="habit-perf-icon">${h.icon || '📝'}</div>
+                    <span class="habit-perf-title">${h.title}</span>
+                    <span class="rank-badge-inline ${rankClass}">${rankLabel}</span>
+                </div>
+                <div class="habit-perf-stats">
+                    <span>🔥 連続 ${streak}日</span>
+                    <span>⚡ ベスト ${bestStreak}日</span>
+                    <span>🏆 累計 ${totalDays}日</span>
+                    <span>📅 直近30日 ${rate30}%</span>
+                </div>
+                <div class="perf-progress-bar-bg">
+                    <div class="perf-progress-bar-fill" style="width:${barPct}%;background:${barColor};"></div>
+                </div>
+                <div class="perf-next-rank-label">${nextLabel}</div>
+            `;
+            container.appendChild(card);
+        });
+    }
+
+    // --- 曜日別達成率チャート ---
+    function renderWeekdayChart() {
+        const canvas = document.getElementById('dowChart');
+        if (!canvas) return;
+
+        // 全completedDatesを集計
+        const weekdayCounts = new Array(7).fill(0);   // 0=Sun ... 6=Sat
+        const weekdayOccurrences = new Array(7).fill(0);
+
+        // 追跡開始日を全習慣の最古completedDateとする
+        let earliestStr = null;
+        habits.forEach(h => {
+            h.completedDates.forEach(d => {
+                if (!earliestStr || d < earliestStr) earliestStr = d;
+            });
+        });
+
+        if (earliestStr && habits.length > 0) {
+            const todayAdjusted = new Date(new Date().getTime() - 4 * 60 * 60 * 1000);
+            const startDate = new Date(earliestStr);
+            for (let d = new Date(startDate); d <= todayAdjusted; d.setDate(d.getDate() + 1)) {
+                weekdayOccurrences[d.getDay()]++;
+            }
+            habits.forEach(h => {
+                h.completedDates.forEach(dateStr => {
+                    weekdayCounts[new Date(dateStr).getDay()]++;
+                });
+            });
+        }
+
+        // Mon-Sun 順に並べ替え (JS: 0=Sun,1=Mon,...,6=Sat → 表示: 月火水木金土日)
+        const order = [1, 2, 3, 4, 5, 6, 0]; // Mon=1 ... Sun=0
+        const dowLabels = ['月', '火', '水', '木', '金', '土', '日'];
+        const dowRates = order.map(i => {
+            if (weekdayOccurrences[i] === 0 || habits.length === 0) return 0;
+            return Math.round((weekdayCounts[i] / (habits.length * weekdayOccurrences[i])) * 100);
+        });
+
+        if (currentDowChart) currentDowChart.destroy();
+        currentDowChart = new Chart(canvas.getContext('2d'), {
+            type: 'bar',
+            data: {
+                labels: dowLabels,
+                datasets: [{
+                    label: '達成率(%)',
+                    data: dowRates,
+                    backgroundColor: dowRates.map(v => `rgba(0, 230, 118, ${0.3 + v / 100 * 0.7})`),
+                    borderColor: '#00e676',
+                    borderWidth: 1,
+                    borderRadius: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true, max: 100,
+                        ticks: { color: '#a0a0a0', callback: v => v + '%' },
+                        grid: { color: '#333' }
+                    },
+                    x: { ticks: { color: '#a0a0a0' }, grid: { display: false } }
+                },
+                plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => ` ${ctx.parsed.y}%` } } }
+            }
+        });
+    }
+
+    // --- 直近30日カレンダーヒートマップ ---
+    function renderHeatmap() {
+        const container = document.getElementById('heatmap-grid');
+        if (!container) return;
+        container.innerHTML = '';
+
+        const todayAdjusted = new Date(new Date().getTime() - 4 * 60 * 60 * 1000);
+        const totalHabits = habits.length;
+
+        // 30日前の日付
+        const startDate = new Date(todayAdjusted);
+        startDate.setDate(startDate.getDate() - 29);
+
+        // 月曜始まりになるよう先頭にemptyセルを追加 (getDay: 0=Sun, 1=Mon, ..., 6=Sat → Mon=0)
+        const startDow = (startDate.getDay() + 6) % 7; // 0=Mon
+        for (let i = 0; i < startDow; i++) {
+            const empty = document.createElement('div');
+            empty.className = 'heatmap-cell empty';
+            container.appendChild(empty);
+        }
+
+        for (let i = 0; i < 30; i++) {
+            const d = new Date(startDate);
+            d.setDate(startDate.getDate() + i);
+            const offset = d.getTimezoneOffset() * 60000;
+            const dateStr = new Date(d.getTime() - offset).toISOString().split('T')[0];
+
+            let count = 0;
+            habits.forEach(h => { if (h.completedDates.includes(dateStr)) count++; });
+
+            const cell = document.createElement('div');
+            cell.className = 'heatmap-cell';
+            cell.title = `${d.getMonth() + 1}/${d.getDate()}  ${count}/${totalHabits}`;
+
+            if (totalHabits === 0 || count === 0) {
+                cell.style.background = 'rgba(255,255,255,0.05)';
+            } else {
+                const intensity = count / totalHabits;
+                const alpha = 0.15 + intensity * 0.85;
+                cell.style.background = `rgba(0, 230, 118, ${alpha.toFixed(2)})`;
+                if (intensity >= 1) cell.style.boxShadow = '0 0 5px rgba(0,230,118,0.5)';
+            }
+            container.appendChild(cell);
+        }
     }
  
     // --- バックアップ機能 ---
@@ -1109,10 +1442,7 @@
             const totalDays = habit.completedDates.length;
             const hTime = habit.time;
  
-            let maxDays, rankClass, rankLabel;
-            if (streak > 30) { maxDays = 365; rankClass = 'rank-gold'; rankLabel = 'Gold'; }
-            else if (streak > 7) { maxDays = 30; rankClass = 'rank-silver'; rankLabel = 'Silver'; }
-            else { maxDays = 7; rankClass = 'rank-bronze'; rankLabel = 'Bronze'; }
+            const { rankClass, rankLabel, maxDays } = getRankInfo(streak);
             let barWidth = Math.min((streak / maxDays) * 100, 100);
             const div = document.createElement('div');
             div.className = `habit-card ${isCompleted ? 'completed' : ''} ${rankClass}`;
@@ -1182,6 +1512,40 @@
         return streak;
     }
  
+    // ランク判定（新ランクシステム）
+    // maxDays = 次のランク到達日数（ストリークバーが100%になる閾値）
+    function getRankInfo(streak) {
+        if (streak >= 365) return { rankClass: 'rank-platinum', rankLabel: 'Platinum',  maxDays: 365, nextRankDays: null };
+        if (streak >= 180) return { rankClass: 'rank-gold',     rankLabel: 'Gold IV',   maxDays: 365, nextRankDays: 365 };
+        if (streak >= 120) return { rankClass: 'rank-gold',     rankLabel: 'Gold III',  maxDays: 180, nextRankDays: 180 };
+        if (streak >=  90) return { rankClass: 'rank-gold',     rankLabel: 'Gold II',   maxDays: 120, nextRankDays: 120 };
+        if (streak >=  60) return { rankClass: 'rank-gold',     rankLabel: 'Gold',      maxDays:  90, nextRankDays:  90 };
+        if (streak >=  28) return { rankClass: 'rank-silver',   rankLabel: 'Silver IV', maxDays:  60, nextRankDays:  60 };
+        if (streak >=  21) return { rankClass: 'rank-silver',   rankLabel: 'Silver III',maxDays:  28, nextRankDays:  28 };
+        if (streak >=  14) return { rankClass: 'rank-silver',   rankLabel: 'Silver II', maxDays:  21, nextRankDays:  21 };
+        if (streak >=   7) return { rankClass: 'rank-silver',   rankLabel: 'Silver',    maxDays:  14, nextRankDays:  14 };
+        return                    { rankClass: 'rank-bronze',   rankLabel: 'Bronze',    maxDays:   7, nextRankDays:   7 };
+    }
+
+    // 最高連続記録を completedDates から計算する
+    function calculateBestStreak(dates) {
+        if (!dates || dates.length === 0) return 0;
+        const sorted = [...dates].sort();
+        let best = 1, current = 1;
+        for (let i = 1; i < sorted.length; i++) {
+            const diffDays = Math.round(
+                (new Date(sorted[i]) - new Date(sorted[i - 1])) / 86400000
+            );
+            if (diffDays === 1) {
+                current++;
+                if (current > best) best = current;
+            } else if (diffDays > 1) {
+                current = 1;
+            }
+        }
+        return best;
+    }
+
     window.handleCardClick = (index) => {
         if (isDragging || isViewingOther) return;
         playPopSound();
