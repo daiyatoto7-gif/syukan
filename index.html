@@ -1159,7 +1159,8 @@
             const streak = calculateStreak(h.completedDates);
             const bestStreak = calculateBestStreak(h.completedDates);
             const totalDays = h.completedDates.length;
-            const { rankClass, rankLabel, maxDays, nextRankDays } = getRankInfo(streak);
+            const effectiveStreak = Math.max(streak, h.rankFloor || 0);
+            const { rankClass, rankLabel, maxDays, nextRankDays } = getRankInfo(effectiveStreak);
 
             // 直近30日達成率
             let recent30 = 0;
@@ -1173,9 +1174,9 @@
             const rate30 = Math.round((recent30 / 30) * 100);
 
             // 次ランクまでの進捗
-            const barPct = nextRankDays ? Math.min((streak / nextRankDays) * 100, 100) : 100;
+            const barPct = nextRankDays ? Math.min((effectiveStreak / nextRankDays) * 100, 100) : 100;
             const nextLabel = nextRankDays
-                ? `次のランクまで あと ${nextRankDays - streak}日`
+                ? `次のランクまで あと ${nextRankDays - effectiveStreak}日`
                 : 'MAX RANK';
 
             const isPlatinum = rankClass === 'rank-platinum';
@@ -1441,9 +1442,16 @@
             const streak = calculateStreak(habit.completedDates);
             const totalDays = habit.completedDates.length;
             const hTime = habit.time;
- 
-            const { rankClass, rankLabel, maxDays } = getRankInfo(streak);
-            let barWidth = Math.min((streak / maxDays) * 100, 100);
+            if (streak > 0) {
+                const floor = getRankFloor(streak);
+                if (floor > (habits[index].rankFloor || 0)) {
+                    habits[index].rankFloor = floor;
+                    localStorage.setItem('habits', JSON.stringify(habits));
+                }
+            }
+            const effectiveStreak = Math.max(streak, habits[index].rankFloor || 0);
+            const { rankClass, rankLabel, maxDays } = getRankInfo(effectiveStreak);
+            let barWidth = Math.min((effectiveStreak / maxDays) * 100, 100);
             const div = document.createElement('div');
             div.className = `habit-card ${isCompleted ? 'completed' : ''} ${rankClass}`;
             div.id = `card-${index}`;
@@ -1525,6 +1533,20 @@
         if (streak >=  14) return { rankClass: 'rank-silver',   rankLabel: 'Silver II', maxDays:  21, nextRankDays:  21 };
         if (streak >=   7) return { rankClass: 'rank-silver',   rankLabel: 'Silver',    maxDays:  14, nextRankDays:  14 };
         return                    { rankClass: 'rank-bronze',   rankLabel: 'Bronze',    maxDays:   7, nextRankDays:   7 };
+    }
+
+    // 現在のランクの開始閾値を返す（忘れた日のランクフロアに使用）
+    function getRankFloor(streak) {
+        if (streak >= 365) return 365;
+        if (streak >= 180) return 180;
+        if (streak >= 120) return 120;
+        if (streak >=  90) return 90;
+        if (streak >=  60) return 60;
+        if (streak >=  28) return 28;
+        if (streak >=  21) return 21;
+        if (streak >=  14) return 14;
+        if (streak >=   7) return 7;
+        return 0;
     }
 
     // 最高連続記録を completedDates から計算する
