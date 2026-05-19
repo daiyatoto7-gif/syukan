@@ -745,6 +745,20 @@
  
     // データ変数
     let habits = JSON.parse(localStorage.getItem('habits')) || [];
+
+    // 既存データの rankFloor 復元（ストリークがリセット済みの習慣にも適用）
+    (function migrateRankFloor() {
+        let needsSave = false;
+        habits.forEach(h => {
+            if (typeof h.rankFloor === 'undefined') {
+                const best = calculateBestStreak(h.completedDates);
+                h.rankFloor = getRankFloor(best);
+                needsSave = true;
+            }
+        });
+        if (needsSave) localStorage.setItem('habits', JSON.stringify(habits));
+    })();
+
     let myHabits = null; // 他ユーザー閲覧中に自分のデータを退避
     let isViewingOther = false;
     let filterMode = 'all';
