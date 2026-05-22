@@ -747,7 +747,8 @@
     let habits = JSON.parse(localStorage.getItem('habits')) || [];
 
     // 既存データの rankFloor 復元（ストリークがリセット済みの習慣にも適用）
-    (function migrateRankFloor() {
+    // ※ クラウド同期後にも再実行できるよう名前付き関数にしておく
+    function migrateRankFloor() {
         let needsSave = false;
         habits.forEach(h => {
             if (typeof h.rankFloor === 'undefined') {
@@ -757,7 +758,8 @@
             }
         });
         if (needsSave) localStorage.setItem('habits', JSON.stringify(habits));
-    })();
+    }
+    migrateRankFloor(); // 起動時（ローカルデータ読み込み直後）に実行
 
     let myHabits = null; // 他ユーザー閲覧中に自分のデータを退避
     let isViewingOther = false;
@@ -811,6 +813,7 @@
             }
             else if (Array.isArray(cloudData) && cloudData.length > 0) {
                 habits = cloudData;
+                migrateRankFloor(); // クラウドデータには rankFloor がないため再付与
                 localStorage.setItem('habits', JSON.stringify(habits));
                 render();
                 console.log("クラウドからデータを復元しました");
