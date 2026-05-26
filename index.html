@@ -820,6 +820,7 @@
             }
             syncStatusEl.textContent = "クラウドと同期しました";
             setTimeout(() => { syncStatusEl.textContent = ""; }, 3000);
+            syncTodoCompletions();
         } catch (e) {
             console.error("読み込みエラー:", e);
             syncStatusEl.textContent = "同期エラー (オフラインの可能性があります)";
@@ -1599,12 +1600,15 @@
     window.toggleHabit = (index) => {
         const today = getToday();
         const dateIndex = habits[index].completedDates.indexOf(today);
+        const willBeCompleted = dateIndex === -1;
+        const habitTitle = habits[index].title;
         setTimeout(() => {
-            if (dateIndex === -1) habits[index].completedDates.push(today);
+            if (willBeCompleted) habits[index].completedDates.push(today);
             else habits[index].completedDates.splice(dateIndex, 1);
             localStorage.setItem('habits', JSON.stringify(habits));
             saveToCloud();
             render();
+            updateTodoStatus(habitTitle, willBeCompleted);
         }, 150);
     };
  
@@ -1688,6 +1692,45 @@
         }
     };
  
+    // --- Google ToDo 連携 ---
+    async function syncTodoCompletions() {
+        if (isViewingOther) return;
+        if (!GAS_API_URL || GAS_API_URL.includes("ここに")) return;
+        try {
+            const today = getToday();
+            const response = await fetch(`${GAS_API_URL}?action=getTodoStatus&userId=${userId}`);
+            const data = await response.json();
+            const completedTitles = data.completedTitles || [];
+            let changed = false;
+            habits.forEach(habit => {
+                if (completedTitles.includes(habit.title) && !habit.completedDates.includes(today)) {
+                    habit.completedDates.push(today);
+                    changed = true;
+                }
+            });
+            if (changed) {
+                localStorage.setItem('habits', JSON.stringify(habits));
+                render();
+                saveToCloud();
+            }
+        } catch (e) {
+            console.error('ToDo同期エラー:', e);
+        }
+    }
+
+    async function updateTodoStatus(habitTitle, completed) {
+        if (!GAS_API_URL || GAS_API_URL.includes("ここに")) return;
+        try {
+            await fetch(GAS_API_URL, {
+                method: 'POST',
+                body: JSON.stringify({ action: 'updateTodo', userId, habitTitle, completed }),
+                headers: { 'Content-Type': 'text/plain' }
+            });
+        } catch (e) {
+            console.error('ToDo更新エラー:', e);
+        }
+    }
+
     render();
     loadFromCloud();
 </script>
